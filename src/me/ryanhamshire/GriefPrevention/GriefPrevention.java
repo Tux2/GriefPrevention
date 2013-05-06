@@ -72,6 +72,9 @@ public class GriefPrevention extends JavaPlugin
 	public ArrayList<World> config_claims_enabledWorlds;			//list of worlds where players can create GriefPrevention claims
 	public ArrayList<World> config_claims_enabledCreativeWorlds;	//list of worlds where additional creative mode anti-grief rules apply
 	
+	//blame:BC_Programming, configurable "Trash" blocks that do not notify
+	public List<Material> config_trash_blocks=null;
+	
 	public boolean config_claims_preventTheft;						//whether containers and crafting blocks are protectable
 	public boolean config_claims_protectCreatures;					//whether claimed animals may be injured by players without permission
 	public boolean config_claims_preventButtonsSwitches;			//whether buttons and switches are protectable
@@ -86,6 +89,7 @@ public class GriefPrevention extends JavaPlugin
 	public int config_claims_maxDepth;								//limit on how deep claims can go
 	public int config_claims_expirationDays;						//how many days of inactivity before a player loses his claims
 	
+	public boolean config_claims_allowVillagerTrades;               //allow trades on claims players don't have permissions on 
 	public int config_claims_automaticClaimsForNewPlayersRadius;	//how big automatic new player claims (when they place a chest) should be.  0 to disable
 	public boolean config_claims_creationRequiresPermission;		//whether creating claims with the shovel requires a permission
 	public int config_claims_claimsExtendIntoGroundDistance;		//how far below the shoveled block a new claim will reach
@@ -141,6 +145,7 @@ public class GriefPrevention extends JavaPlugin
 	public boolean config_fireDestroys;								//whether fire destroys blocks outside of claims
 	
 	public boolean config_addItemsToClaimedChests;					//whether players may add items to claimed chests by left-clicking them
+	public boolean config_sign_Eavesdrop;                           //whether to allow sign eavesdropping at all.
 	public boolean config_eavesdrop; 								//whether whispered messages will be visible to administrators
 	public ArrayList<String> config_eavesdrop_whisperCommands;		//list of whisper commands to eavesdrop on
 	
@@ -159,6 +164,10 @@ public class GriefPrevention extends JavaPlugin
 	public boolean config_claims_warnOnBuildOutside;				//whether players should be warned when they're building in an unclaimed area
 	
 	public HashMap<String, Integer> config_seaLevelOverride;		//override for sea level, because bukkit doesn't report the right value for all situations
+	//configuration option changes the number of non-trash blocks that can be placed before
+	//the plugin warns about being in the wilderness and all that guff about
+	//players being able to undo your work. 0 disables the display entirely.
+	public int config_claims_wildernessBlocksDelay;
 	
 	//reference to the economy plugin, if economy integration is enabled
 	public static Economy economy = null;					
@@ -297,6 +306,52 @@ public class GriefPrevention extends JavaPlugin
 			this.config_seaLevelOverride.put(worlds.get(i).getName(), seaLevelOverride);
 		}
 		
+		//read trash blocks.
+		//Cobblestone,Torch,Dirt,Sapling,Gravel,Sand,TNT,Workbench
+		this.config_trash_blocks = new ArrayList<Material>();
+		for(Material trashblock:new Material[]{Material.COBBLESTONE,
+				Material.TORCH,Material.DIRT,Material.SAPLING,Material.GRAVEL,Material.SAND,Material.TNT,Material.WORKBENCH}){
+		this.config_trash_blocks.add(trashblock);
+		}
+		List<String> trashblocks= config.getStringList("GriefPrevention.Claims.TrashBlocks");
+		if(trashblocks==null || trashblocks.size()==0){
+		//go with the default, which we already set.	
+			trashblocks = new ArrayList<String>();
+			for(String iterate:new String[] {"COBBLESTONE","TORCH","DIRT","SAPLING","GRAVEL","SAND","TNT","WORKBENCH"}){
+				trashblocks.add(iterate);
+			}
+			//set trashblocks, since we save it to outConfig later, so save out this default. This makes it easier to 
+			//edit.
+			
+		}
+		else {
+			//reset...
+			this.config_trash_blocks=new ArrayList<Material>();
+			for(String trashmaterial:trashblocks){
+				 try {
+					 //replace spaces with underscores...
+					 trashmaterial = trashmaterial.replace(" ", "_");
+				Material parsed = Material.valueOf(trashmaterial.toUpperCase());
+				config_trash_blocks.add(parsed);
+				GriefPrevention.AddLogEntry("trash Material:" + parsed.toString());
+				 }
+				 catch(IllegalArgumentException iae){
+					 //nothing special, log though.
+					 GriefPrevention.AddLogEntry("failed to parse trashmaterial Entry:" + trashmaterial.toUpperCase());
+				 }
+			}
+		}
+		//persist to output...
+		
+		this.config_claims_wildernessBlocksDelay = config.getInt("GriefPrevention.Claims.WildernessWarningBlockCount",15); //number of blocks,0 will disable the wilderness warning.
+		
+		
+		this.config_sign_Eavesdrop = config.getBoolean("GriefPrevention.SignEavesDrop",true);
+		outConfig.set("GriefPrevention.SignEavesDrop", this.config_sign_Eavesdrop);
+		
+		config_claims_allowVillagerTrades = config.getBoolean("GriefPrevention.Claims.PreventTrades",true);
+		outConfig.set("GriefPrevention.Claims.PreventTrades", config_claims_allowVillagerTrades);
+						
 		this.config_claims_preventTheft = config.getBoolean("GriefPrevention.Claims.PreventTheft", true);
 		this.config_claims_protectCreatures = config.getBoolean("GriefPrevention.Claims.ProtectCreatures", true);
 		this.config_claims_preventButtonsSwitches = config.getBoolean("GriefPrevention.Claims.PreventButtonsSwitches", true);
@@ -576,7 +631,11 @@ public class GriefPrevention extends JavaPlugin
 		outConfig.set("GriefPrevention.Claims.AllowUnclaimingCreativeModeLand", this.config_claims_allowUnclaimInCreative);
 		outConfig.set("GriefPrevention.Claims.AutoRestoreUnclaimedCreativeLand", this.config_claims_autoRestoreUnclaimedCreativeLand);
 		
+		outConfig.set("GriefPrevention.Claims.TrashBlocks",trashblocks);
+		outConfig.set("GriefPrevention.Claims.WildernessWarningBlockCount", this.config_claims_wildernessBlocksDelay);
+		
 		outConfig.set("GriefPrevention.Spam.Enabled", this.config_spam_enabled);
+		
 		outConfig.set("GriefPrevention.Spam.LoginCooldownMinutes", this.config_spam_loginCooldownMinutes);
 		outConfig.set("GriefPrevention.Spam.MonitorSlashCommands", slashCommandsToMonitor);
 		outConfig.set("GriefPrevention.Spam.WarningMessage", this.config_spam_warningMessage);
@@ -816,7 +875,33 @@ public class GriefPrevention extends JavaPlugin
 			
 			return true;
 		}
-		
+		else if(cmd.getName().equalsIgnoreCase("giveclaimblocks") && player!=null){
+			if(args.length<2)
+			{
+				return false;
+			}
+			int desiredxfer=0;
+			try {desiredxfer = Integer.parseInt(args[1]);}
+			catch(NumberFormatException nfe){
+				return false;
+			}
+			this.transferClaimBlocks(player.getName(),args[0],desiredxfer);
+		}
+		else if(cmd.getName().equalsIgnoreCase("transferclaimblocks") && player!=null){
+				if(args.length<3){
+					return false;
+				}
+				String sourcename = args[0];
+				String targetname = args[1];
+				int desiredxfer = 0;
+				try {desiredxfer = Integer.parseInt(args[2]);}
+				catch(NumberFormatException exx){
+					return false;
+				}
+				this.transferClaimBlocks(sourcename, targetname, desiredxfer);
+				
+				
+		}
 		//abandonallclaims
 		else if(cmd.getName().equalsIgnoreCase("abandonallclaims") && player != null)
 		{
@@ -1926,7 +2011,29 @@ public class GriefPrevention extends JavaPlugin
 		
 		return false; 
 	}
-	
+	/**
+	 * transfers a number of claim blocks from a source player to a  target player.
+	 * @param Source Source player name. 
+	 * @param string Target Player name.
+	 * @return number of claim blocks transferred.
+	 */
+	private synchronized int transferClaimBlocks(String Source, String Target,int DesiredAmount) {
+		// TODO Auto-generated method stub
+		
+		//transfer claim blocks from source to target, return number of claim blocks transferred.
+		PlayerData playerData = this.dataStore.getPlayerData(Source);
+		PlayerData receiverData = this.dataStore.getPlayerData(Target);
+		if(playerData!=null && receiverData!=null){
+		    int xferamount = Math.min(playerData.accruedClaimBlocks,DesiredAmount);
+		    playerData.accruedClaimBlocks-=xferamount;
+		    receiverData.accruedClaimBlocks+=xferamount;
+		    return xferamount;
+		}
+		return 0;
+		
+		
+	}
+
 	public static String getfriendlyLocationString(Location location) 
 	{
 		return location.getWorld().getName() + "(" + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ() + ")";
