@@ -438,6 +438,7 @@ public abstract class DataStore
 						{
 							subdivision.id = this.nextClaimID;
 							this.incrementNextClaimID();
+							this.writeClaimToStorage(subdivision);
 						}
 						return subdivision;
 					}
