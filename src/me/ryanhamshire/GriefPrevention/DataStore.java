@@ -188,6 +188,14 @@ public abstract class DataStore
 	 */
 	synchronized void addClaim(Claim newClaim)
 	{
+		
+		//Get a unique identifier for the claim which will be used to name the file on disk
+		if(newClaim.id == null)
+		{
+			newClaim.id = this.nextClaimID;
+			this.incrementNextClaimID();
+		}
+
 		//subdivisions are easy
 		if(newClaim.parent != null)
 		{
@@ -195,13 +203,6 @@ public abstract class DataStore
 			newClaim.inDataStore = true;
 			this.saveClaim(newClaim);
 			return;
-		}
-		
-		//Get a unique identifier for the claim which will be used to name the file on disk
-		if(newClaim.id == null)
-		{
-			newClaim.id = this.nextClaimID;
-			this.incrementNextClaimID();
 		}
 		
 		//add it and mark it as added
@@ -278,19 +279,20 @@ public abstract class DataStore
 	 */
 	synchronized public void saveClaim(Claim claim)
 	{
-		//subdivisions don't save to their own files, but instead live in their parent claim's file
-		//so any attempt to save a subdivision will save its parent (and thus the subdivision)
-		if(claim.parent != null)
-		{
-			this.saveClaim(claim.parent);
-			return;
-		}
 		
 		//Get a unique identifier for the claim which will be used to name the file on disk
 		if(claim.id == null)
 		{
 			claim.id = this.nextClaimID;
 			this.incrementNextClaimID();
+		}
+
+		//subdivisions don't save to their own files, but instead live in their parent claim's file
+		//so any attempt to save a subdivision will save its parent (and thus the subdivision)
+		if(claim.parent != null)
+		{
+			this.saveClaim(claim.parent);
+			return;
 		}
 		
 		this.writeClaimToStorage(claim);
@@ -431,7 +433,17 @@ public abstract class DataStore
 				for(int j = 0; j < claim.children.size(); j++)
 				{
 					Claim subdivision = claim.children.get(j);
-					if(subdivision.contains(location, ignoreHeight, false)) return subdivision;
+					if(subdivision.contains(location, ignoreHeight, false)) {
+						
+						//Check for null id due to previous bug where subdivisions would not get an id
+						if(subdivision.id == null)
+						{
+							subdivision.id = this.nextClaimID;
+							this.incrementNextClaimID();
+							this.writeClaimToStorage(subdivision);
+						}
+						return subdivision;
+					}
 				}						
 					
 				return claim;
