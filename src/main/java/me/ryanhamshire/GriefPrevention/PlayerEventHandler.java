@@ -1135,10 +1135,10 @@ class PlayerEventHandler implements Listener
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(player.getWorld());
 		//determine target block.  FEATURE: shovel and stick can be used from a distance away
 		Block clickedBlock = null;
-		
+
 		try
 		{
-			clickedBlock = event.getClickedBlock();  //null returned here means interacting with air			
+			clickedBlock = event.getClickedBlock();  //null returned here means interacting with air
 			if(clickedBlock == null || clickedBlock.getType() == Material.SNOW)
 			{
 				//try to find a far away non-air block along line of sight
@@ -1147,21 +1147,21 @@ class PlayerEventHandler implements Listener
 				transparentMaterials.add(Byte.valueOf((byte)Material.SNOW.getId()));
 				transparentMaterials.add(Byte.valueOf((byte)Material.LONG_GRASS.getId()));
 				clickedBlock = player.getTargetBlock(transparentMaterials, 250);
-			}			
+			}
 		}
 		catch(Exception e)  //an exception intermittently comes from getTargetBlock().  when it does, just ignore the event
 		{
 			return;
 		}
-		
+
 		//if no block, stop here
 		if(clickedBlock == null)
 		{
 			return;
 		}
-		
+
 		Material clickedBlockType = clickedBlock.getType();
-		
+
 		//apply rules for putting out fires (requires build permission)
 		PlayerData playerData = this.dataStore.getPlayerData(player.getName());
 		if(event.getClickedBlock() != null && event.getClickedBlock().getRelative(event.getBlockFace()).getType() == Material.FIRE)
@@ -1169,13 +1169,13 @@ class PlayerEventHandler implements Listener
 			Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
 			if(claim != null)
 			{
-				
-				
-				
+
+
+
 				playerData.lastClaim = claim;
-				
-				
-				
+
+
+
 				String noBuildReason = claim.allowBuild(player);
 				if(noBuildReason != null)
 				{
@@ -1187,7 +1187,7 @@ class PlayerEventHandler implements Listener
 		}
 		
 		//apply rules for containers and crafting blocks
-		if(	wc.getClaimsPreventTheft() && (
+		if(	wc.getClaimsPreventTheft() && event.getClickedBlock() != null && (
 						event.getAction() == Action.RIGHT_CLICK_BLOCK && (
 						clickedBlock.getState() instanceof InventoryHolder ||
 						clickedBlockType == Material.WORKBENCH || 
@@ -1269,9 +1269,9 @@ class PlayerEventHandler implements Listener
 		}
 		
 		//otherwise apply rules for doors, if configured that way
-		else if((wc.getClaimsLockWoodenDoors() && clickedBlockType == Material.WOODEN_DOOR) ||
+		else if(event.getClickedBlock() != null && ((wc.getClaimsLockWoodenDoors() && clickedBlockType == Material.WOODEN_DOOR) ||
 				(wc.getClaimsLockTrapDoors() && clickedBlockType == Material.TRAP_DOOR) ||
-				(wc.getClaimsLockFenceGates() && clickedBlockType == Material.FENCE_GATE))
+				(wc.getClaimsLockFenceGates() && clickedBlockType == Material.FENCE_GATE)))
 		{
 			Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
 			if(claim != null)
@@ -1290,7 +1290,7 @@ class PlayerEventHandler implements Listener
 		}
 		
 		//otherwise apply rules for buttons and switches
-		else if(wc.getClaimsPreventButtonsSwitches() && (clickedBlockType == null || clickedBlockType == Material.STONE_BUTTON || clickedBlockType == Material.WOOD_BUTTON || clickedBlockType == Material.LEVER || wc.getModsAccessTrustIds().Contains(new MaterialInfo(clickedBlock.getTypeId(), clickedBlock.getData(), null))))
+		else if(event.getClickedBlock() != null && wc.getClaimsPreventButtonsSwitches() && (clickedBlockType == null || clickedBlockType == Material.STONE_BUTTON || clickedBlockType == Material.WOOD_BUTTON || clickedBlockType == Material.LEVER || wc.getModsAccessTrustIds().Contains(new MaterialInfo(clickedBlock.getTypeId(), clickedBlock.getData(), null))))
 		{
 			
 			Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
@@ -1320,7 +1320,7 @@ class PlayerEventHandler implements Listener
 		}
 		
 		//apply rule for note blocks and repeaters
-		else if(clickedBlockType == Material.NOTE_BLOCK || clickedBlockType == Material.DIODE_BLOCK_ON || clickedBlockType == Material.DIODE_BLOCK_OFF)
+		else if(event.getClickedBlock() != null && clickedBlockType == Material.NOTE_BLOCK || clickedBlockType == Material.DIODE_BLOCK_ON || clickedBlockType == Material.DIODE_BLOCK_OFF)
 		{
 			Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
 			if(claim != null)
@@ -1335,7 +1335,7 @@ class PlayerEventHandler implements Listener
 				}
 			}
 		}
-		
+
 		//otherwise handle right click (shovel, stick, bonemeal)
 		else
 		{

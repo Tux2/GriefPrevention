@@ -89,7 +89,7 @@ class EntityEventHandler implements Listener
 	private Claim ChangeBlockClaimCache = null;
 	//don't allow endermen to change blocks
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-	public void onEntityChangeBLock(EntityChangeBlockEvent event)
+	public void onEntityChangeBlock(EntityChangeBlockEvent event)
 	{
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(event.getEntity().getWorld());
 		
@@ -132,6 +132,20 @@ class EntityEventHandler implements Listener
 		{
 			event.setCancelled(true);
 		}
+        if (wc.getClaimsPreventButtonsSwitches() && event.getBlock().getType() == Material.WOOD_BUTTON && event.getEntity().getType() == EntityType.ARROW) {
+            Arrow arrow = (Arrow) event.getEntity();
+            if (arrow.getShooter() instanceof Player) {
+                Player shooter = (Player) arrow.getShooter();
+                Claim claim = GriefPrevention.instance.dataStore.getClaimAt(event.getBlock().getLocation(), false, null);
+                if (claim != null) {
+                    String noAccessReason = claim.allowAccess(shooter);
+                    if (noAccessReason != null) {
+                        GriefPrevention.sendMessage(shooter, TextMode.Err, noAccessReason);
+                        event.setCancelled(true);
+                    }
+                }
+            }
+        }
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onEntityExplode(EntityExplodeEvent explodeEvent)
