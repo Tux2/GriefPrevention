@@ -1,8 +1,9 @@
-name: GriefPrevention
-main: me.ryanhamshire.GriefPrevention.GriefPrevention
-softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter]
-dev-url: http://dev.bukkit.org/server-mods/grief-prevention
-version: 7.8
+name: ${project.name}
+main: ${project.main}
+softdepend: ${project.softdepends}
+dev-url: ${project.devurl}
+version: ${project.version}
+
 commands:
    setclaimblocks:
       description: sets the claim blocks for a player to a specific value.
