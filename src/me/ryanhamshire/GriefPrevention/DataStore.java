@@ -73,6 +73,8 @@ public abstract class DataStore
 	public final static String configFilePath = dataLayerFolderPath + File.separator + "config.yml";
 	final static String messagesFilePath = dataLayerFolderPath + File.separator + "messages.yml";
 	
+	protected boolean noDelete;
+	
 	//initialization!
 	void initialize() throws Exception
 	{
@@ -302,6 +304,11 @@ public abstract class DataStore
 	    return new Location(world, x, y, z);
 	}	
 
+	synchronized public void deleteAllFromExternalStorage()
+	{
+		
+	}
+	
 	synchronized public void saveClaimData(){
 		
 	}
@@ -1517,6 +1524,9 @@ public abstract class DataStore
 	
 	void close(){
 		
+		deleteAllFromExternalStorage();
+		noDelete = true;
+		
 		for(Claim c:this.claims.claimmap.values()){
 			//System.out.println("Saving Claim ID:" + c.getID());
 			this.saveClaim(c);
@@ -1524,7 +1534,7 @@ public abstract class DataStore
 			
 		}
 		
-		
+		noDelete = false;
 	}
 
 	

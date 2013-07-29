@@ -273,6 +273,26 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 	}
 	
 	@Override
+	public synchronized void deleteAllFromExternalStorage() {
+		
+		try
+		{
+			this.refreshDataConnection();
+			
+			Statement statement = this.databaseConnection.createStatement();
+			statement.execute("TRUNCATE TABLE griefprevention_claimdata;");	
+			statement.close();
+		}
+		catch(SQLException e)
+		{
+			GriefPrevention.AddLogEntry("Unable to clear table.  Details:");
+			GriefPrevention.AddLogEntry(e.getMessage());
+		}
+
+	}
+
+
+	@Override
 	synchronized void writeClaimToStorage(Claim claim)  //see datastore.cs.  this will ALWAYS be a top level claim
 	{
 		try
@@ -280,7 +300,7 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 			this.refreshDataConnection();
 			
 			//wipe out any existing data about this claim
-			this.deleteClaimFromSecondaryStorage(claim);
+			if (!noDelete) this.deleteClaimFromSecondaryStorage(claim);
 			
 			//write top level claim data to the database
 			this.writeClaimData(claim);
@@ -363,22 +383,22 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 		try
 		{
 			this.refreshDataConnection();
-//			Statement statement = databaseConnection.createStatement();
-//			
-//			statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
-//					id + ", '" +
-//					owner + "', '" +
-//					lesserCornerString + "', '" +
-//					greaterCornerString + "', '" +
-//					buildersString + "', '" +
-//					containersString + "', '" +
-//					accessorsString + "', '" +
-//					managersString + "', " +
-//					parentId +	", " +
-//					claim.neverdelete +
-//					");");
-//			
-//			statement.close();
+			Statement statement = databaseConnection.createStatement();
+			
+			statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
+					id + ", '" +
+					owner + "', '" +
+					lesserCornerString + "', '" +
+					greaterCornerString + "', '" +
+					buildersString + "', '" +
+					containersString + "', '" +
+					accessorsString + "', '" +
+					managersString + "', " +
+					parentId +	", " +
+					claim.neverdelete +
+					");");
+			
+			statement.close();
 			//GriefPrevention.AddLogEntry("Successfully inserted data into griefprevention_claimdata- ID:" + claim.getID());
 		}
 		catch(SQLException e)
