@@ -289,7 +289,7 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 			for(int i = 0; i < claim.children.size(); i++)
 			{
 				//write the subdivision's data to the database
-				//this.writeClaimData(claim.children.get(i));
+				this.writeClaimData(claim.children.get(i));
 			}
 		}
 		catch(SQLException e)
@@ -363,22 +363,22 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 		try
 		{
 			this.refreshDataConnection();
-			Statement statement = databaseConnection.createStatement();
-			
-			statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
-					id + ", '" +
-					owner + "', '" +
-					lesserCornerString + "', '" +
-					greaterCornerString + "', '" +
-					buildersString + "', '" +
-					containersString + "', '" +
-					accessorsString + "', '" +
-					managersString + "', " +
-					parentId +	", " +
-					claim.neverdelete +
-					");");
-			
-			statement.close();
+//			Statement statement = databaseConnection.createStatement();
+//			
+//			statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
+//					id + ", '" +
+//					owner + "', '" +
+//					lesserCornerString + "', '" +
+//					greaterCornerString + "', '" +
+//					buildersString + "', '" +
+//					containersString + "', '" +
+//					accessorsString + "', '" +
+//					managersString + "', " +
+//					parentId +	", " +
+//					claim.neverdelete +
+//					");");
+//			
+//			statement.close();
 			//GriefPrevention.AddLogEntry("Successfully inserted data into griefprevention_claimdata- ID:" + claim.getID());
 		}
 		catch(SQLException e)
