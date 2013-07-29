@@ -8,10 +8,6 @@
 
   <repositories>
     <repository>
-      <id>sk89q-repo</id>
-      <url>http://maven.sk89q.com/repo/net/milkbowl/vault/Vault/</url>
-    </repository>
-    <repository>
       <id>bukkit-repo</id>
       <url>http://repo.bukkit.org/content/groups/public</url>
     </repository>
@@ -50,7 +46,8 @@
       <groupId>net.milkbowl.vault</groupId>
       <artifactId>vault</artifactId>
       <version>1.2.16</version>
-      <scope>compile</scope>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/Vault-1.2.16.jar</systemPath>
     </dependency>
   </dependencies>
 
