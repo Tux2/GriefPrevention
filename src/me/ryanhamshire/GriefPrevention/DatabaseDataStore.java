@@ -362,8 +362,9 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 		
 		try
 		{
+			long start = System.nanoTime();
 			this.refreshDataConnection();
-			
+			long mid = System.nanoTime();
 			Statement statement = databaseConnection.createStatement();
 			statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
 					id + ", '" +
@@ -379,6 +380,8 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 					");");
 			
 			statement.close();
+			long end = System.nanoTime();
+			GriefPrevention.AddLogEntry("Times: " + (mid - start) + " " + (end - mid));
 			//GriefPrevention.AddLogEntry("Successfully inserted data into griefprevention_claimdata- ID:" + claim.getID());
 		}
 		catch(SQLException e)
