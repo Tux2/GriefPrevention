@@ -635,8 +635,12 @@ public class GriefPrevention extends JavaPlugin
 				
 				this.dataStore.saveClaimData();
 				
+				AddLogEntry("Unload event.");
+		
 		GPUnloadEvent uevent = new GPUnloadEvent(this);
 		Bukkit.getPluginManager().callEvent(uevent);
+		AddLogEntry("Saving player data.");
+
 		//save data for any online players
 		Player [] players = this.getServer().getOnlinePlayers();
 		for(int i = 0; i < players.length; i++)
@@ -646,11 +650,15 @@ public class GriefPrevention extends JavaPlugin
 			PlayerData playerData = this.dataStore.getPlayerData(playerName);
 			this.dataStore.savePlayerData(playerName, playerData);
 		}
+		AddLogEntry("Unloading worlds.");
+
 		for(World iterate:Bukkit.getWorlds()){
 			ww.WorldUnload(new WorldUnloadEvent(iterate));
 		}
 		ww=null;
 		ww=null;
+		AddLogEntry("Saving data.");
+
 		this.dataStore.close();
 		//instance=null;
 		
