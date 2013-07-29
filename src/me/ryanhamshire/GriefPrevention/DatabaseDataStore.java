@@ -377,6 +377,8 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 					parentId +	", " +
 					claim.neverdelete +
 					");");
+			
+			statement.close();
 			//GriefPrevention.AddLogEntry("Successfully inserted data into griefprevention_claimdata- ID:" + claim.getID());
 		}
 		catch(SQLException e)
