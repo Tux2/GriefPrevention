@@ -289,7 +289,7 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 			for(int i = 0; i < claim.children.size(); i++)
 			{
 				//write the subdivision's data to the database
-				this.writeClaimData(claim.children.get(i));
+				//this.writeClaimData(claim.children.get(i));
 			}
 		}
 		catch(SQLException e)
@@ -302,7 +302,6 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 	//actually writes claim data to the database
 	synchronized private void writeClaimData(Claim claim) throws SQLException
 	{
-		long start = System.nanoTime();
 		String lesserCornerString = this.locationToString(claim.getLesserBoundaryCorner());
 		String greaterCornerString = this.locationToString(claim.getGreaterBoundaryCorner());
 		String owner = claim.ownerName;
@@ -360,13 +359,12 @@ ArrayList<Claim> claimsToRemove = new ArrayList<Claim>();
 		{
 			id = claim.id;
 		}
-		long end = System.nanoTime();
-		GriefPrevention.AddLogEntry("Gathering data: " + (end - start));
 		
 		try
 		{
 			this.refreshDataConnection();
 			Statement statement = databaseConnection.createStatement();
+			
 			statement.execute("INSERT INTO griefprevention_claimdata VALUES(" +
 					id + ", '" +
 					owner + "', '" +
