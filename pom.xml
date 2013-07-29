@@ -6,13 +6,6 @@
   <version>7.8</version>
   <name>GriefPrevention</name>
 
-  <repositories>
-    <repository>
-      <id>bukkit-repo</id>
-      <url>http://repo.bukkit.org/content/groups/public</url>
-    </repository>
-  </repositories>
-
   <build>
     <finalName>GriefPrevention</finalName>
     <resources>
@@ -35,13 +28,22 @@
   </build>
 
   <dependencies>
-    <dependency>
+     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>bukkit</artifactId>
-      <version>1.5.2-R1.1-SNAPSHOT</version>
-      <type>jar</type>
-      <scope>compile</scope>
+      <version>1.6.2-R0.1-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/bukkit-1.6.2-R0.1-SNAPSHOT.jar</systemPath>
     </dependency>
+    
+    <dependency>
+      <groupId>org.bukkit</groupId>
+      <artifactId>craftbukkit</artifactId>
+      <version>1.6.2-R0.1-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/craftbukkit-1.6.2-R0.1-SNAPSHOT.jar</systemPath>
+    </dependency>
+    
     <dependency>
       <groupId>net.milkbowl.vault</groupId>
       <artifactId>vault</artifactId>
