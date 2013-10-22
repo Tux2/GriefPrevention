@@ -245,6 +245,7 @@ public abstract class DataStore {
 		CreateClaimResult result = new CreateClaimResult();
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(world);
 		int smallx, bigx, smally, bigy, smallz, bigz;
+		boolean setID = false;
 
 		Player gotplayer = Bukkit.getPlayer(ownerName);
 		// determine small versus big inputs
@@ -275,6 +276,12 @@ public abstract class DataStore {
 		// creative mode claims always go to bedrock
 		if (wc.getCreativeRules()) {
 			smally = 2;
+		}
+
+		// set the ID so it can be retrieved by a plugin listening to the ClaimBeforeCreateEvent
+		if (id == null) {
+			id = this.nextClaimID;
+			setID = true;
 		}
 
 		// create a new claim instance (but don't save it, yet)
@@ -332,6 +339,12 @@ public abstract class DataStore {
 			 * CreateClaimResult.Result.Canceled; return result; }
 			 */
 		}
+
+		// increment the ID because it was originally null
+		if (setID) {
+			this.incrementNextClaimID();
+		}
+
 		// otherwise add this new claim to the data store to make it effective
 		this.addClaim(newClaim);
 
