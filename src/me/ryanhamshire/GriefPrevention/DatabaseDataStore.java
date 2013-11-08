@@ -477,10 +477,12 @@ public class DatabaseDataStore extends DataStore {
 			}
 
 		} catch (Exception exx) {
-			System.out.println("Exception from databaseDataStore handling of WorldLoad-");
-			exx.printStackTrace();
-		}
+			GriefPrevention.AddLogEntry("Exception from databaseDataStore handling of WorldLoad: " + exx.getMessage());
 
+			// dmulloy2 - write a useful exception to debug
+			Debugger.Write(GriefPrevention.getUsefulStack(exx,
+					"handling WorldLoad for " + loading == null ? "null world" : loading.getName()), DebugLevel.Errors);
+		}
 	}
 
 	// actually writes claim data to the database

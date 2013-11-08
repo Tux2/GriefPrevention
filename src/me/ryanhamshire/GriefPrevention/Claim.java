@@ -270,10 +270,14 @@ public class Claim {
 				return false;
 			}
 		}
-		System.out.println("Adding " + player + " as manager to claim ID #" + this.getID());
+
+		GriefPrevention.AddLogEntry("Adding player " + player + " as manager to claim #" + id);
+
 		managers.add(player);
-		if (inDataStore)
+		if (inDataStore) {
 			GriefPrevention.instance.dataStore.saveClaim(this);
+		}
+
 		return true;
 	}
 

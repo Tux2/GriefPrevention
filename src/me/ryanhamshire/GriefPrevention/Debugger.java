@@ -12,6 +12,7 @@ public class Debugger {
 
     public enum DebugLevel {
 		Errors, Informational, None, Verbose, Warning;
+
 		/**
 		 * returns whether the given DebugLevel applies to this one.
 		 * 
@@ -28,10 +29,10 @@ public class Debugger {
 	}
 
 	public static void Write(String Message, DebugLevel Level) {
-		// System.out.println(Message);
-		 if(GriefPrevention.instance!=null &&
-		 GriefPrevention.instance.debug!=null)
-		 GriefPrevention.instance.debug.Output(Message, Level);
+		GriefPrevention instance = GriefPrevention.instance;
+		if (instance != null && instance.debug != null) {
+			instance.debug.Output(Message, Level);
+		}
 	}
 
 	private DebugLevel CurrentLevel;

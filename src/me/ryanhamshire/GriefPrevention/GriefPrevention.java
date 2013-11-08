@@ -116,9 +116,15 @@ public class GriefPrevention extends JavaPlugin {
 
 	// adds a server log entry
 	public static void AddLogEntry(String entry) {
-		if (instance == null)
+		AddLogEntry(Level.INFO, entry);
+	}
+
+	public static void AddLogEntry(Level level, String entry) {
+		if (instance == null) {
 			return;
-		instance.getLogger().log(Level.INFO, entry);
+		}
+
+		instance.getLogger().log(level, entry);
 	}
 
 	/**
@@ -1226,4 +1232,29 @@ public class GriefPrevention extends JavaPlugin {
 		return this.getWorldCfg(world).getSiegeEnabled();
 	}
 
+	/**
+	 * Generates a more useful stack trace for debugging and informational purpouses
+	 * 
+	 * @param e - Origional {@link Throwable} (can be Exception or Error)
+	 * @param circumstance - What we were trying to do when the stack occured
+	 * 
+	 * @author dmulloy2
+	 */
+	public static String getUsefulStack(Exception e, String circumstance) {
+		StringBuilder ret = new StringBuilder();
+		ret.append("Encountered an exception while " + circumstance + ":" + '\n');
+		ret.append(e.getClass().getName() + ": " + e.getMessage() + '\n');
+		ret.append("Affected classes: " + '\n');
+
+		for (StackTraceElement ste : e.getStackTrace()) {
+			if (ste.getClassName().contains(GriefPrevention.class.getPackage().getName()))
+				ret.append('\t' + ste.toString() + '\n');
+		}
+
+		if (ret.lastIndexOf("\n") >= 0) {
+			ret.replace(ret.lastIndexOf("\n"), ret.length(), "");
+		}
+
+		return ret.toString();
+	}
 }

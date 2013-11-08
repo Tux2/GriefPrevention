@@ -75,6 +75,7 @@ public class BlockEventHandler implements Listener {
 
 	public static PotionEffectType[] PositiveEffectsArray;
     public static PotionEffectType[] NegativeEffectsArray;
+
     static {
         List<PotionEffectType> PositiveEffects = new ArrayList<PotionEffectType>();
         try {PositiveEffects.add(PotionEffectType.HEAL);} catch(NoSuchFieldError nsfe){}
@@ -102,9 +103,8 @@ public class BlockEventHandler implements Listener {
         try {NegativeEffects.add(PotionEffectType.WITHER);} catch(NoSuchFieldError nsfe){}
         NegativeEffectsArray = new PotionEffectType[NegativeEffects.size()];
         NegativeEffects.toArray(NegativeEffectsArray);
-
-
     }
+
 	// convenience reference to singleton datastore
 	private DataStore dataStore;
 	

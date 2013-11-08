@@ -89,7 +89,7 @@ public class CommandHandler implements CommandExecutor {
 		for (GriefPreventionCommand iterate : GPCommands) {
 			String[] gotlabels = iterate.getLabels();
 			if (gotlabels == null) {
-				System.out.println("ERROR: GriefPrevention command named " + iterate.getClass().getName() + " returned null for labels!");
+				GriefPrevention.AddLogEntry("Command named " + iterate.getClass().getName() + " returned null for labels!");
 				continue;
 			}
 			for (String addcmd : gotlabels) {
@@ -99,12 +99,10 @@ public class CommandHandler implements CommandExecutor {
 					pc.setExecutor(iterate);
 
 				} catch (Exception exx) {
-					System.out.println("Exception adding command:" + addcmd);
-					System.out.println("This is likely a mistake in plugin.yml, please notify the GriefPrevention maintainers :)");
-					exx.printStackTrace();
+					GriefPrevention.AddLogEntry(GriefPrevention.getUsefulStack(exx, "adding command \"" + addcmd + "\""));
+					GriefPrevention.AddLogEntry("This is likely a mistake in plugin.yml, please notify the GriefPrevention maintainers :)");
 				}
 			}
-
 		}
 
 	}
