@@ -347,6 +347,7 @@ public class DatabaseDataStore extends DataStore {
 		}
 	}
 
+	@Override
 	public synchronized long getNextClaimID(){
 		
 		return this.nextClaimID;
