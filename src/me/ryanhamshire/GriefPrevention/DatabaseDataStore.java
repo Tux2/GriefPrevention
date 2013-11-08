@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.exceptions.WorldNotFoundException;
@@ -477,11 +478,8 @@ public class DatabaseDataStore extends DataStore {
 			}
 
 		} catch (Exception exx) {
-			GriefPrevention.AddLogEntry("Exception from databaseDataStore handling of WorldLoad: " + exx.getMessage());
-
-			// dmulloy2 - write a useful exception to debug
-			Debugger.Write(GriefPrevention.getUsefulStack(exx,
-					"handling WorldLoad for " + loading == null ? "null world" : loading.getName()), DebugLevel.Errors);
+			GriefPrevention.AddLogEntry(Level.SEVERE,
+					GriefPrevention.getUsefulStack(exx, "handling WorldLoad for " + loading == null ? "null world" : loading.getName()));
 		}
 	}
 
