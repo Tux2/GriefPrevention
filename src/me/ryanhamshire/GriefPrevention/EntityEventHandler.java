@@ -534,8 +534,6 @@ class EntityEventHandler implements Listener {
 			return;
 		}
 
-		GriefPrevention.instance.dataStore.getClaimAt(location, true);
-
 		// Make sure the entity != null before we continue
 		Entity explodingEntity = explodeEvent.getEntity();
 		if (explodingEntity == null) {
@@ -1019,22 +1017,22 @@ class EntityEventHandler implements Listener {
 		// FEATURE: similar to above, placing a painting requires build
 		// permission in the claim
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(event.getEntity().getWorld());
-		if (!wc.Enabled())
+		if (! wc.Enabled()) {
 			return;
+		}
+
 		// if the player doesn't have permission, don't allow the placement
 		String noBuildReason = GriefPrevention.instance.allowBuild(event.getPlayer(), event.getEntity().getLocation());
 		if (noBuildReason != null) {
 			event.setCancelled(true);
 			GriefPrevention.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason);
 			return;
-		}
-
-		// otherwise, apply entity-count limitations for creative worlds
-		else if (GriefPrevention.instance.creativeRulesApply(event.getEntity().getLocation())) {
-			this.dataStore.getPlayerData(event.getPlayer().getName());
-			Claim claim = this.dataStore.getClaimAt(event.getBlock().getLocation(), false);
-			if (claim == null)
+	    // otherwise, apply entity-count limitations for creative worlds
+		} else if (GriefPrevention.instance.creativeRulesApply(event.getEntity().getLocation())) {
+			Claim claim = dataStore.getClaimAt(event.getBlock().getLocation(), false);
+			if (claim == null) {
 				return;
+			}
 
 			String noEntitiesReason = claim.allowMoreEntities();
 			if (noEntitiesReason != null) {
@@ -1048,17 +1046,16 @@ class EntityEventHandler implements Listener {
 	@EventHandler
 	public void onShootBow(EntityShootBowEvent event) {
 		// if shot by a player, cache it for onProjectileHit.
-
 	}
 
 	// when a vehicle is damaged
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onVehicleDamage(VehicleDamageEvent event) {
-		
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(event.getVehicle().getWorld());
-		
-		if (!wc.Enabled())
+		if (! wc.Enabled()) {
 			return;
+		}
+
 		// all of this is anti theft code
                 
 		// determine which player is attacking, if any
@@ -1077,13 +1074,13 @@ class EntityEventHandler implements Listener {
 				attacker = (Player) potion.getShooter();
 			}
 		}
+
 		// if Damage source is unspecified and we allow environmental damage,
 		// don't cancel the event.
-		if(attacker==null && wc.getEnvironmentalVehicleDamage().Allowed(event.getVehicle().getLocation(), null,false).Denied()){
-			
+		if (attacker == null && wc.getEnvironmentalVehicleDamage().Allowed(event.getVehicle().getLocation(), null, false).Denied()) {
 			event.setCancelled(true);
 			return;
-		}else if (attacker!=null && wc.getVehicleDamage().Allowed(event.getVehicle().getLocation(), attacker, true).Denied()) {
+		} else if (attacker != null && wc.getVehicleDamage().Allowed(event.getVehicle().getLocation(), attacker, true).Denied()) {
 			event.setCancelled(true);
 			return;
 		}
@@ -1091,10 +1088,6 @@ class EntityEventHandler implements Listener {
 		// NOTE: vehicles can be pushed around.
 		// so unless precautions are taken by the owner, a resourceful thief
 		// might find ways to steal anyway
-	
-
-
-		
 	}
 
 	// don't allow zombies to break down doors
