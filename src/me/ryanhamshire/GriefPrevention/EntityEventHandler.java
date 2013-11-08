@@ -534,7 +534,7 @@ class EntityEventHandler implements Listener {
 			return;
 		}
 
-		// Make sure the entity != null before we continue
+		// dmulloy2 - Make sure the entity != null before we continue
 		Entity explodingEntity = explodeEvent.getEntity();
 		if (explodingEntity == null) {
 			return;
@@ -596,7 +596,7 @@ class EntityEventHandler implements Listener {
 			usebehaviour = wc.getOtherExplosionBlockDamageBehaviour();
 		}
 
-		// Basic null check for location before we continue
+		// dmulloy2 - Basic null check for location before we continue
 		Location loc = explodingEntity.getLocation();
 		if (loc == null) {
 			return;

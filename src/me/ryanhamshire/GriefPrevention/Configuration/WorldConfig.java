@@ -41,7 +41,6 @@ public class WorldConfig {
 	// shut up now and get to writing the applicable code.
 
 	public static WorldConfig fromFile(String templateFile) {
-		// TODO Auto-generated method stub
 		File grabfile = new File(templateFile);
 		if (!grabfile.exists())
 			return null;
@@ -796,7 +795,9 @@ public class WorldConfig {
 		this.VehicleDamage = new ClaimBehaviourData("Vehicle Damage", config, outConfig, "GriefPrevention.Rules.VehicleDamage", ClaimBehaviourData.getAll("Vehicle Damage").setBehaviourMode(ClaimBehaviourMode.RequireContainer));
 
 		this.EnvironmentalVehicleDamage = new ClaimBehaviourData("Environmental Vehicle Damage", config, outConfig, "GriefPrevention.Rules.EnvironmentalVehicleDamage", ClaimBehaviourData.getOutsideClaims("Environmental Vehicle Damage"));
-//		System.out.println(pName + ",Environmental Vehicle Damage:" + this.getEnvironmentalVehicleDamage().toString());
+
+		// dmulloy2 - replace System.out.println with proper debug
+		GriefPrevention.instance.debug.Output(pName + ",Environmental Vehicle Damage:" + this.getEnvironmentalVehicleDamage().toString(), DebugLevel.Verbose);
 		
 		this.ZombieDoorBreaking = new ClaimBehaviourData("Zombie Door Breaking", config, outConfig, "GriefPrevention.Rules.ZombieDoorBreaking", ClaimBehaviourData.getNone("Zombie Door Breaking"));
 

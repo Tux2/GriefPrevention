@@ -107,9 +107,7 @@ public class BlockEventHandler implements Listener {
     }
 	// convenience reference to singleton datastore
 	private DataStore dataStore;
-	// ensures fluids don't flow out of claims, unless into another claim where
-	// the owner is trusted to build
-	private Claim lastSpreadClaim = null;
+	
 
 	// private ArrayList<Material> trashBlocks;
 
@@ -345,7 +343,6 @@ public class BlockEventHandler implements Listener {
 			return;
 		Claim fromClaim = this.dataStore.getClaimAt(fromBlock.getLocation(), false);
 		if (fromClaim != null) {
-			this.lastSpreadClaim = fromClaim;
 		}
 
 		// where to?

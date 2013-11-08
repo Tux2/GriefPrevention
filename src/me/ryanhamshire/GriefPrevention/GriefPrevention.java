@@ -765,12 +765,10 @@ public class GriefPrevention extends JavaPlugin {
 		}
 	}
 
-	private void migrateData() {
-
-		// Migrates data from 7.7 GriefPreventionData folder to GriefPrevention
-		// folder.
-
-	}
+//  Migrates data from GriefPrevention 7.7, Currently unused
+//	private void migrateData() {
+//
+//	}
 
 	// handles slash commands
 	@Override
@@ -921,15 +919,7 @@ public class GriefPrevention extends JavaPlugin {
 		Configuration = new ConfigData(config, outConfig);
 
 		if (config_mod_config_search) { // if specified, to search, save the
-										// results to the template file.
-			// WorldConfig's will save the ModdedBlock Contents when they are
-			// created,
-			// therefore we will set the template in this manner. Otherwise,
-			// this setting (ModdedBlock search results)
-			// will only be valid for this one server session.
-			WorldConfig templatefile = WorldConfig.fromFile(Configuration.getTemplateFile());
-			// we don't actually need to do anything with the variable, all the
-			// work was done in fromFile() and the WorldConfig constructors.
+										WorldConfig.fromFile(Configuration.getTemplateFile());
 
 		}
 
@@ -978,11 +968,6 @@ public class GriefPrevention extends JavaPlugin {
 		// start the recurring cleanup event for entities in creative worlds, if
 		// enabled.
 
-		// start recurring cleanup scan for unused claims belonging to inactive
-		// players
-		// if the option is enabled.
-		// look through all world configurations.
-		boolean claimcleanupOn = false;
 		boolean entitycleanupEnabled = false;
 		try {
 			DataStoreWrite.save(usestoragedata);

@@ -121,8 +121,6 @@ public abstract class DataStore {
 			this.incrementNextClaimID();
 		}
 
-		// add it and mark it as added
-		int j = 0;
 		this.claims.add(newClaim);
 
 		newClaim.inDataStore = true;
@@ -247,7 +245,7 @@ public abstract class DataStore {
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(world);
 		int smallx, bigx, smally, bigy, smallz, bigz;
 
-		Player gotplayer = Bukkit.getPlayer(ownerName);
+		Bukkit.getPlayer(ownerName);
 		// determine small versus big inputs
 		if (x1 < x2) {
 			smallx = x1;
@@ -538,7 +536,6 @@ public abstract class DataStore {
         for(Player p:Bukkit.getOnlinePlayers()){
 
             Claim playerclaim = GriefPrevention.instance.dataStore.getClaimAt(p.getLocation(),false);
-            boolean dobreak=false;
             for(Claim c:siegeData.claims){
                 if(c==playerclaim){
                     PlayersinClaim.add(p);
@@ -823,15 +820,17 @@ public abstract class DataStore {
 	 *            entirely encompassed by the given locations.
 	 * @return Set of claims.
 	 */
-
 	synchronized public Set<Claim> getClaimsIn(Location Lesser, Location Greater, boolean Inclusive) {
-
-		WorldConfig wc = GriefPrevention.instance.getWorldCfg(Greater.getWorld());
-		if(!wc.getClaimsEnabled()) return new HashSet<Claim>();
+		// dmulloy2 - move null checks up before we get greater's world
 		if (Lesser == null)
 			throw new IllegalArgumentException("Lesser");
 		if (Greater == null)
 			throw new IllegalArgumentException("Greater");
+
+		WorldConfig wc = GriefPrevention.instance.getWorldCfg(Greater.getWorld());
+		if (! wc.getClaimsEnabled()) {
+			return new HashSet<Claim>();
+		}
 		
 		int LessX = Math.min(Lesser.getBlockX(), Greater.getBlockX());
 		int LessY = Math.min(Lesser.getBlockY(), Greater.getBlockY());
@@ -1461,7 +1460,7 @@ public abstract class DataStore {
 		int y1 = Math.min(p1.getBlockY(), p2.getBlockY());
 		int z1 = Math.min(p1.getBlockZ(), p2.getBlockZ());
 
-		int x2 = Math.max(p1.getBlockX(), p2.getBlockX());
+		Math.max(p1.getBlockX(), p2.getBlockX());
 		int y2 = Math.max(p1.getBlockY(), p2.getBlockY());
 		int z2 = Math.max(p1.getBlockZ(), p2.getBlockZ());
 

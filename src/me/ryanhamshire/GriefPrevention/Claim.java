@@ -417,8 +417,7 @@ public class Claim {
 		// mods can make this happen somehow)
 		if (player == null)
 			return "";
-        WorldConfig wc = GriefPrevention.instance.getWorldCfg(player.getWorld());
-		// when a player tries to build in a claim, if he's under siege, the
+        // when a player tries to build in a claim, if he's under siege, the
 		// siege may extend to include the new claim
 		GriefPrevention.instance.dataStore.tryExtendSiege(player, this);
 
@@ -817,10 +816,10 @@ public class Claim {
 		return true;
 	}
 
-	private void ensureValid() {
-		// makes sure our two Locations point to a valid world.
-
-	}
+//  Makes sure our two locations point to a valid world. Unused.
+//	private void ensureValid() {
+//
+//	}
 
 	/**
 	 * Measurements. All measurements are in blocks
