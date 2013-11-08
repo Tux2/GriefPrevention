@@ -52,7 +52,7 @@ public class DeliverClaimBlocksTask implements Runnable {
             float percentpart = accrual-(float)Math.floor(accrual);
             if(percentpart !=0){
                 //get the players current Claim Blocks, multiply it by accrual/12 and use that as the accrued value.
-                accruedBlocks = (int)((float)playerData.getRemainingClaimBlocks()*percentpart/12);
+                accruedBlocks = (int)(playerData.getRemainingClaimBlocks()*percentpart/12);
 
 
             }

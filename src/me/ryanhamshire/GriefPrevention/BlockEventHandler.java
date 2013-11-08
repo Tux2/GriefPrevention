@@ -21,7 +21,6 @@ package me.ryanhamshire.GriefPrevention;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.ryanhamshire.GriefPrevention.Configuration.BlockPlacementRules;
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.Configuration.ClaimBehaviourData;
 import me.ryanhamshire.GriefPrevention.Configuration.WorldConfig;
@@ -76,6 +75,7 @@ public class BlockEventHandler implements Listener {
 
 	public static PotionEffectType[] PositiveEffectsArray;
     public static PotionEffectType[] NegativeEffectsArray;
+
     static {
         List<PotionEffectType> PositiveEffects = new ArrayList<PotionEffectType>();
         try {PositiveEffects.add(PotionEffectType.HEAL);} catch(NoSuchFieldError nsfe){}
@@ -103,14 +103,11 @@ public class BlockEventHandler implements Listener {
         try {NegativeEffects.add(PotionEffectType.WITHER);} catch(NoSuchFieldError nsfe){}
         NegativeEffectsArray = new PotionEffectType[NegativeEffects.size()];
         NegativeEffects.toArray(NegativeEffectsArray);
-
-
     }
+
 	// convenience reference to singleton datastore
 	private DataStore dataStore;
-	// ensures fluids don't flow out of claims, unless into another claim where
-	// the owner is trusted to build
-	private Claim lastSpreadClaim = null;
+	
 
 	// private ArrayList<Material> trashBlocks;
 
@@ -346,7 +343,6 @@ public class BlockEventHandler implements Listener {
 			return;
 		Claim fromClaim = this.dataStore.getClaimAt(fromBlock.getLocation(), false);
 		if (fromClaim != null) {
-			this.lastSpreadClaim = fromClaim;
 		}
 
 		// where to?

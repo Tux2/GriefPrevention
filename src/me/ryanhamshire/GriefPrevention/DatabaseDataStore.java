@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.exceptions.WorldNotFoundException;
@@ -347,6 +348,7 @@ public class DatabaseDataStore extends DataStore {
 		}
 	}
 
+	@Override
 	public synchronized long getNextClaimID(){
 		
 		return this.nextClaimID;
@@ -476,10 +478,9 @@ public class DatabaseDataStore extends DataStore {
 			}
 
 		} catch (Exception exx) {
-			System.out.println("Exception from databaseDataStore handling of WorldLoad-");
-			exx.printStackTrace();
+			GriefPrevention.AddLogEntry(Level.SEVERE,
+					GriefPrevention.getUsefulStack(exx, "handling WorldLoad for " + loading == null ? "null world" : loading.getName()));
 		}
-
 	}
 
 	// actually writes claim data to the database

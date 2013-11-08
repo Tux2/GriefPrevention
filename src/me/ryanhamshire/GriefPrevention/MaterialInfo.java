@@ -18,7 +18,6 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import java.security.BasicPermission;
 import java.util.regex.Pattern;
 
 import org.bukkit.Material;

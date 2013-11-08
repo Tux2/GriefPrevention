@@ -210,10 +210,7 @@ public class ClaimMetaHandler {
 		try {
 			result.save(ClaimMeta);
 		} catch (IOException iox) {
-			GriefPrevention.instance.getLogger().log(Level.SEVERE, "Failed to save Claim Meta to file," + ClaimMeta);
-			iox.printStackTrace();
+			GriefPrevention.AddLogEntry(GriefPrevention.getUsefulStack(iox, "saving ClaimMeta to file"));
 		}
-
 	}
-
 }

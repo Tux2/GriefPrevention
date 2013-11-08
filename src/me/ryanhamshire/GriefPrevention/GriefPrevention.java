@@ -28,9 +28,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import me.ryanhamshire.GriefPrevention.Configuration.*;
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.CommandHandling.CommandHandler;
+import me.ryanhamshire.GriefPrevention.Configuration.ClaimBehaviourData;
+import me.ryanhamshire.GriefPrevention.Configuration.ClaimMetaHandler;
+import me.ryanhamshire.GriefPrevention.Configuration.ConfigData;
+import me.ryanhamshire.GriefPrevention.Configuration.ModBlockHelper;
+import me.ryanhamshire.GriefPrevention.Configuration.ModdedBlocksSearchResults;
+import me.ryanhamshire.GriefPrevention.Configuration.WorldConfig;
 import me.ryanhamshire.GriefPrevention.events.GPLoadEvent;
 import me.ryanhamshire.GriefPrevention.events.GPUnloadEvent;
 import me.ryanhamshire.GriefPrevention.tasks.DeliverClaimBlocksTask;
@@ -111,9 +116,15 @@ public class GriefPrevention extends JavaPlugin {
 
 	// adds a server log entry
 	public static void AddLogEntry(String entry) {
-		if (instance == null)
+		AddLogEntry(Level.INFO, entry);
+	}
+
+	public static void AddLogEntry(Level level, String entry) {
+		if (instance == null) {
 			return;
-		instance.getLogger().log(Level.INFO, entry);
+		}
+
+		instance.getLogger().log(level, entry);
 	}
 
 	/**
@@ -760,12 +771,10 @@ public class GriefPrevention extends JavaPlugin {
 		}
 	}
 
-	private void migrateData() {
-
-		// Migrates data from 7.7 GriefPreventionData folder to GriefPrevention
-		// folder.
-
-	}
+//  Migrates data from GriefPrevention 7.7, Currently unused
+//	private void migrateData() {
+//
+//	}
 
 	// handles slash commands
 	@Override
@@ -916,15 +925,7 @@ public class GriefPrevention extends JavaPlugin {
 		Configuration = new ConfigData(config, outConfig);
 
 		if (config_mod_config_search) { // if specified, to search, save the
-										// results to the template file.
-			// WorldConfig's will save the ModdedBlock Contents when they are
-			// created,
-			// therefore we will set the template in this manner. Otherwise,
-			// this setting (ModdedBlock search results)
-			// will only be valid for this one server session.
-			WorldConfig templatefile = WorldConfig.fromFile(Configuration.getTemplateFile());
-			// we don't actually need to do anything with the variable, all the
-			// work was done in fromFile() and the WorldConfig constructors.
+										WorldConfig.fromFile(Configuration.getTemplateFile());
 
 		}
 
@@ -973,11 +974,6 @@ public class GriefPrevention extends JavaPlugin {
 		// start the recurring cleanup event for entities in creative worlds, if
 		// enabled.
 
-		// start recurring cleanup scan for unused claims belonging to inactive
-		// players
-		// if the option is enabled.
-		// look through all world configurations.
-		boolean claimcleanupOn = false;
 		boolean entitycleanupEnabled = false;
 		try {
 			DataStoreWrite.save(usestoragedata);
@@ -1236,4 +1232,29 @@ public class GriefPrevention extends JavaPlugin {
 		return this.getWorldCfg(world).getSiegeEnabled();
 	}
 
+	/**
+	 * Generates a more useful stack trace for debugging and informational purpouses
+	 * 
+	 * @param e - Origional {@link Throwable} (can be Exception or Error)
+	 * @param circumstance - What we were trying to do when the stack occured
+	 * 
+	 * @author dmulloy2
+	 */
+	public static String getUsefulStack(Throwable e, String circumstance) {
+		StringBuilder ret = new StringBuilder();
+		ret.append("Encountered an exception while " + circumstance + ":" + '\n');
+		ret.append(e.getClass().getName() + ": " + e.getMessage() + '\n');
+		ret.append("Affected classes: " + '\n');
+
+		for (StackTraceElement ste : e.getStackTrace()) {
+			if (ste.getClassName().contains(GriefPrevention.class.getPackage().getName()))
+				ret.append('\t' + ste.toString() + '\n');
+		}
+
+		if (ret.lastIndexOf("\n") >= 0) {
+			ret.replace(ret.lastIndexOf("\n"), ret.length(), "");
+		}
+
+		return ret.toString();
+	}
 }

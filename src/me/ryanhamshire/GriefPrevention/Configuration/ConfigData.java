@@ -119,7 +119,8 @@ public class ConfigData {
 		File ConfigLocation = new File(WorldConfigLocation);
 		if (!ConfigLocation.exists()) {
 			// if not found, create the directory.
-			GriefPrevention.instance.getLogger().log(Level.INFO, "mkdirs() on " + ConfigLocation.getAbsolutePath());
+			Debugger.Write("mkdirs() on " + ConfigLocation.getAbsolutePath(), DebugLevel.Informational);
+//			GriefPrevention.instance.getLogger().log(Level.INFO, "mkdirs() on " + ConfigLocation.getAbsolutePath());
 			ConfigLocation.mkdirs();
 
 		}
@@ -288,7 +289,8 @@ public class ConfigData {
 				try {
 					outConfiguration.save(new File(checkyamlfile));
 				} catch (IOException iex) {
-					GriefPrevention.instance.getLogger().log(Level.SEVERE, "Failed to save World Config for world " + worldName);
+					GriefPrevention.AddLogEntry(Level.SEVERE, GriefPrevention.getUsefulStack(iex, "saving WorldConfig for " + worldName));
+//					GriefPrevention.instance.getLogger().log(Level.SEVERE, "Failed to save World Config for world " + worldName);
 
 				}
 			} else {
@@ -315,7 +317,7 @@ public class ConfigData {
 				try {
 					Target.save(new File(checkyamlfile));
 				} catch (IOException ioex) {
-					GriefPrevention.instance.getLogger().log(Level.SEVERE, "Failed to write world configuration to " + checkyamlfile);
+					GriefPrevention.AddLogEntry(Level.SEVERE, GriefPrevention.getUsefulStack(ioex, "writing WorldConfig to " + checkyamlfile));
 				}
 
 			}

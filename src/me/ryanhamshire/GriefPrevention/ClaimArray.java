@@ -61,11 +61,10 @@ public class ClaimArray implements Iterable<Claim> {
 				aclaims.add(newClaim);
 				chunkmap.put(chunk, aclaims);
 			} else {
-				int k = 0;
-				if (!aclaims.contains(newClaim)) {
-
+				if (! aclaims.contains(newClaim)) {
 					aclaims.add(newClaim);
 				}
+
 				chunkmap.put(chunk, aclaims);
 			}
 		}

@@ -2,7 +2,6 @@ package me.ryanhamshire.GriefPrevention.Configuration;
 
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.Debugger;
-
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.Messages;
@@ -15,8 +14,8 @@ import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-//this enum is used for some of the configuration options.
 import org.bukkit.entity.Tameable;
+//this enum is used for some of the configuration options.
 
 //holds data pertaining to an option and where it works. 
 //used primarily for information on explosions.

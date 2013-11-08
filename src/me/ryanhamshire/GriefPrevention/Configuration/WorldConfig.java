@@ -41,7 +41,6 @@ public class WorldConfig {
 	// shut up now and get to writing the applicable code.
 
 	public static WorldConfig fromFile(String templateFile) {
-		// TODO Auto-generated method stub
 		File grabfile = new File(templateFile);
 		if (!grabfile.exists())
 			return null;
@@ -769,7 +768,8 @@ public class WorldConfig {
 
 		this.TNTExplosionBlockDamageBehaviour = new ClaimBehaviourData("TNT Explosion Damage", config, outConfig, "GriefPrevention.Rules.BlockDamageTNTExplosions", ClaimBehaviourData.getOutsideClaims("TNT Explosion Damage").setSeaLevelOffsets(SeaLevelOverrideTypes.Offset, -1));
 
-		this.OtherExplosionBlockDamageBehaviour = new ClaimBehaviourData("Other Explosion Damage", config, outConfig, "GriefPrevention.Rules.BlockDamageOtherExplosions", ClaimBehaviourData.getOutsideClaims("Other Explosion Damage").getAboveSeaLevel("Other Explosion Damage").setSeaLevelOffsets(SeaLevelOverrideTypes.Offset, -1));
+		ClaimBehaviourData.getOutsideClaims("Other Explosion Damage");
+		this.OtherExplosionBlockDamageBehaviour = new ClaimBehaviourData("Other Explosion Damage", config, outConfig, "GriefPrevention.Rules.BlockDamageOtherExplosions", ClaimBehaviourData.getAboveSeaLevel("Other Explosion Damage").setSeaLevelOffsets(SeaLevelOverrideTypes.Offset, -1));
 
 		ClaimBehaviourData WaterRequire = new ClaimBehaviourData("Water Placement", PlacementRules.BelowOnly, PlacementRules.Both, ClaimBehaviourMode.RequireBuild);
 		ClaimBehaviourData LavaRequire = new ClaimBehaviourData("Lava Placement", PlacementRules.BelowOnly, PlacementRules.Both, ClaimBehaviourMode.RequireBuild).setWildernessRequiredPermission(PermNodes.LavaPermission);
@@ -795,7 +795,9 @@ public class WorldConfig {
 		this.VehicleDamage = new ClaimBehaviourData("Vehicle Damage", config, outConfig, "GriefPrevention.Rules.VehicleDamage", ClaimBehaviourData.getAll("Vehicle Damage").setBehaviourMode(ClaimBehaviourMode.RequireContainer));
 
 		this.EnvironmentalVehicleDamage = new ClaimBehaviourData("Environmental Vehicle Damage", config, outConfig, "GriefPrevention.Rules.EnvironmentalVehicleDamage", ClaimBehaviourData.getOutsideClaims("Environmental Vehicle Damage"));
-		System.out.println(pName + ",Environmental Vehicle Damage:" + this.getEnvironmentalVehicleDamage().toString());
+
+		// dmulloy2 - replace System.out.println with proper debug
+		Debugger.Write(pName + ",Environmental Vehicle Damage:" + this.getEnvironmentalVehicleDamage().toString(), DebugLevel.Verbose);
 		
 		this.ZombieDoorBreaking = new ClaimBehaviourData("Zombie Door Breaking", config, outConfig, "GriefPrevention.Rules.ZombieDoorBreaking", ClaimBehaviourData.getNone("Zombie Door Breaking"));
 

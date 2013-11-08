@@ -7,8 +7,8 @@
 
     <properties>
         <!-- Versions of dependencies, just update the version numbers here -->
-        <mc-ver>1.6.2</mc-ver>
-        <bukkit-ver>R0.1</bukkit-ver>
+        <mc-ver>1.6.4</mc-ver>
+        <bukkit-ver>R2.0</bukkit-ver>
         <vault-ver>1.2.16</vault-ver>
     </properties>
 

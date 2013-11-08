@@ -1,13 +1,14 @@
 package me.ryanhamshire.GriefPrevention.Configuration;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import me.ryanhamshire.GriefPrevention.Debugger;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SiegeableData {
     private String MaterialName;

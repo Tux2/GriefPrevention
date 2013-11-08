@@ -18,7 +18,11 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import me.ryanhamshire.GriefPrevention.Configuration.ClaimBehaviourData;
 import me.ryanhamshire.GriefPrevention.Configuration.ClaimBehaviourData.ClaimAllowanceConstants;
@@ -80,8 +84,6 @@ import org.bukkit.inventory.meta.BookMeta;
 
 //handles events related to entities
 class EntityEventHandler implements Listener {
-	private Claim ChangeBlockClaimCache = null;
-
 	// convenience reference for the singleton datastore
 	private DataStore dataStore;
 
@@ -301,11 +303,9 @@ class EntityEventHandler implements Listener {
 			//
 			if (subEvent.getEntity() instanceof Creature) {
 
-				Claim cachedClaim = null;
 				PlayerData playerData = null;
 				if (attacker != null) {
 					playerData = this.dataStore.getPlayerData(attacker.getName());
-					cachedClaim = playerData.lastClaim;
 				}
 
 				Claim claim = this.dataStore.getClaimAt(event.getEntity().getLocation(), false);
@@ -518,47 +518,48 @@ class EntityEventHandler implements Listener {
                     BuildPower+=getCoalescedPower(SourceEntity,Range/2,DealtWith);
                 }
             }
-
         }
+
         return BuildPower;
     }
+
     private Set<Entity> HandledEntities = new HashSet<Entity>();
+
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onEntityExplode(EntityExplodeEvent explodeEvent) {
-
-
-
-		// System.out.println("EntityExplode:" +
-		// explodeEvent.getEntity().getClass().getName());
 		List<Block> blocks = explodeEvent.blockList();
 		Location location = explodeEvent.getLocation();
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(location.getWorld());
-		if (!wc.Enabled())
+		if (! wc.Enabled()) {
 			return;
-		Claim claimatEntity = GriefPrevention.instance.dataStore.getClaimAt(location, true);
-		// quickest exit: if we are inside a claim and allowExplosions is false,
-		// break.
-		// if(claimatEntity!=null && claimatEntity.areExplosivesAllowed) return;
+		}
+
+		// dmulloy2 - Make sure the entity != null before we continue
+		Entity explodingEntity = explodeEvent.getEntity();
+		if (explodingEntity == null) {
+			return;
+		}
 
 		// logic: we have Creeper and TNT Explosions currently. each one has
 		// special configuration options.
 		// make sure that we are allowed to explode, first.
-		Entity explodingEntity = explodeEvent.getEntity();
-		boolean isCreeper = explodingEntity != null && explodingEntity instanceof Creeper;
-		boolean isTNT = explodingEntity != null && (explodingEntity instanceof TNTPrimed || explodingEntity instanceof ExplosiveMinecart);
 
-		boolean isWither = explodingEntity != null && (explodingEntity instanceof WitherSkull || explodingEntity instanceof Wither);
+		// Determine which type of explosion it is
+		boolean isCreeper = explodingEntity instanceof Creeper;
+		boolean isTNT = explodingEntity instanceof TNTPrimed || explodingEntity instanceof ExplosiveMinecart;
+		boolean isWither = explodingEntity instanceof WitherSkull || explodingEntity instanceof Wither;
 
 		ClaimBehaviourData preExplodeCheck = null;
 
 		if (isCreeper) {
 			preExplodeCheck = wc.getCreeperExplosionBehaviour();
-		} else if (isWither)
+		} else if (isWither) {
 			preExplodeCheck = wc.getWitherExplosionBehaviour();
-		else if (isTNT)
+		} else if (isTNT) {
 			preExplodeCheck = wc.getTNTExplosionBehaviour();
-		else
+		} else {
 			preExplodeCheck = wc.getOtherExplosionBehaviour();
+		}
 
 		if (preExplodeCheck.Allowed(explodeEvent.getLocation(), null).Denied()) {
 			//Debugger.Write("Explosion cancelled.", DebugLevel.Verbose);
@@ -567,11 +568,11 @@ class EntityEventHandler implements Listener {
 		}
 
 		ClaimBehaviourData usebehaviour = null;
-		if (isCreeper)
+		if (isCreeper) {
 			usebehaviour = wc.getCreeperExplosionBlockDamageBehaviour();
-		else if (isWither)
+		} else if (isWither) {
 			usebehaviour = wc.getWitherExplosionBlockDamageBehaviour();
-		else if (isTNT){
+		} else if (isTNT) {
 			usebehaviour = wc.getTNTExplosionBlockDamageBehaviour();
             if(wc.getTNTCoalesceBehaviour().Allowed(explodeEvent.getLocation(), null).Allowed()
                     && ! HandledEntities.contains(explodeEvent.getEntity())
@@ -588,33 +589,34 @@ class EntityEventHandler implements Listener {
                 float newYield= newTNT.getYield()*powerfactor;
                 newTNT.setYield(newYield);
 
-            } else if(HandledEntities.contains(explodeEvent.getEntity())){
+            } else if (HandledEntities.contains(explodeEvent.getEntity())) {
                 HandledEntities.remove(explodeEvent.getEntity());
             }
-		}
-		else
+		} else {
 			usebehaviour = wc.getOtherExplosionBlockDamageBehaviour();
-		Claim claimpos = GriefPrevention.instance.dataStore.getClaimAt(explodeEvent.getEntity().getLocation(),true);
-		// //go through each block that was affected...
+		}
+
+		// dmulloy2 - Basic null check for location before we continue
+		Location loc = explodingEntity.getLocation();
+		if (loc == null) {
+			return;
+		}
+
+		Claim claimpos = GriefPrevention.instance.dataStore.getClaimAt(explodeEvent.getEntity().getLocation(), true);
+
+		// Go through each block that was affected...
 		for (int i = 0; i < blocks.size(); i++) {
-
-
-
 			Block block = blocks.get(i);
             Claim explodepos = GriefPrevention.instance.dataStore.getClaimAt(block.getLocation(),false);
-            if(explodepos!=null && explodepos.siegeData!=null){
+            if (explodepos!=null && explodepos.siegeData != null) {
                 //under siege...
-
-
-                if(!wc.getSiegeBlockRevert()){
+                if (! wc.getSiegeBlockRevert()) {
                     float gotpower;
                     if(-1==(gotpower=SiegeableData.getListPower(wc.getTNTSiegeBlocks(),block.getType())) &&
                     (gotpower < explodeEvent.getYield())){
                        blocks.remove(i--);
                     }
-                }
-                else {
-
+                } else {
                     String usekey = GriefPrevention.getfriendlyLocationString(block.getLocation());
                     // if it already contains an entry, the block was broken
                     // during this siege
@@ -628,14 +630,9 @@ class EntityEventHandler implements Listener {
                         explodepos.siegeData.SiegedBlocks.put(usekey, new BrokenBlockInfo(block.getLocation()));
                         // replace it manually
                         block.setType(Material.AIR);
-
-
-
                     }
-
-
                 }
-                }
+            }
 
 			// if(wc.getModsExplodableIds().contains(new
 			// MaterialInfo(block.getTypeId(), block.getData(), null)))
@@ -687,8 +684,6 @@ class EntityEventHandler implements Listener {
 		if (!wc.Enabled())
 			return;
 		Player grabplayer = null;
-		PlayerData pdata = null;
-
 		if (event.getEntity() instanceof Arrow) {
 			Arrow proj = (Arrow) event.getEntity();
 			Player source = null;
@@ -1022,22 +1017,22 @@ class EntityEventHandler implements Listener {
 		// FEATURE: similar to above, placing a painting requires build
 		// permission in the claim
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(event.getEntity().getWorld());
-		if (!wc.Enabled())
+		if (! wc.Enabled()) {
 			return;
+		}
+
 		// if the player doesn't have permission, don't allow the placement
 		String noBuildReason = GriefPrevention.instance.allowBuild(event.getPlayer(), event.getEntity().getLocation());
 		if (noBuildReason != null) {
 			event.setCancelled(true);
 			GriefPrevention.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason);
 			return;
-		}
-
-		// otherwise, apply entity-count limitations for creative worlds
-		else if (GriefPrevention.instance.creativeRulesApply(event.getEntity().getLocation())) {
-			PlayerData playerData = this.dataStore.getPlayerData(event.getPlayer().getName());
-			Claim claim = this.dataStore.getClaimAt(event.getBlock().getLocation(), false);
-			if (claim == null)
+	    // otherwise, apply entity-count limitations for creative worlds
+		} else if (GriefPrevention.instance.creativeRulesApply(event.getEntity().getLocation())) {
+			Claim claim = dataStore.getClaimAt(event.getBlock().getLocation(), false);
+			if (claim == null) {
 				return;
+			}
 
 			String noEntitiesReason = claim.allowMoreEntities();
 			if (noEntitiesReason != null) {
@@ -1051,17 +1046,16 @@ class EntityEventHandler implements Listener {
 	@EventHandler
 	public void onShootBow(EntityShootBowEvent event) {
 		// if shot by a player, cache it for onProjectileHit.
-
 	}
 
 	// when a vehicle is damaged
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onVehicleDamage(VehicleDamageEvent event) {
-		
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(event.getVehicle().getWorld());
-		
-		if (!wc.Enabled())
+		if (! wc.Enabled()) {
 			return;
+		}
+
 		// all of this is anti theft code
                 
 		// determine which player is attacking, if any
@@ -1080,13 +1074,13 @@ class EntityEventHandler implements Listener {
 				attacker = (Player) potion.getShooter();
 			}
 		}
+
 		// if Damage source is unspecified and we allow environmental damage,
 		// don't cancel the event.
-		if(attacker==null && wc.getEnvironmentalVehicleDamage().Allowed(event.getVehicle().getLocation(), null,false).Denied()){
-			
+		if (attacker == null && wc.getEnvironmentalVehicleDamage().Allowed(event.getVehicle().getLocation(), null, false).Denied()) {
 			event.setCancelled(true);
 			return;
-		}else if (attacker!=null && wc.getVehicleDamage().Allowed(event.getVehicle().getLocation(), attacker, true).Denied()) {
+		} else if (attacker != null && wc.getVehicleDamage().Allowed(event.getVehicle().getLocation(), attacker, true).Denied()) {
 			event.setCancelled(true);
 			return;
 		}
@@ -1094,10 +1088,6 @@ class EntityEventHandler implements Listener {
 		// NOTE: vehicles can be pushed around.
 		// so unless precautions are taken by the owner, a resourceful thief
 		// might find ways to steal anyway
-	
-
-
-		
 	}
 
 	// don't allow zombies to break down doors

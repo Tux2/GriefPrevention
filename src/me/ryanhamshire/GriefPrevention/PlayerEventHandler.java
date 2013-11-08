@@ -18,7 +18,14 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +48,23 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.Boat;
+import org.bukkit.entity.Chicken;
+import org.bukkit.entity.Cow;
+import org.bukkit.entity.Creature;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Hanging;
+import org.bukkit.entity.Horse;
+import org.bukkit.entity.MushroomCow;
+import org.bukkit.entity.Ocelot;
+import org.bukkit.entity.Pig;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
+import org.bukkit.entity.Tameable;
+import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.Villager;
+import org.bukkit.entity.Wolf;
 import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.entity.minecart.PoweredMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
@@ -761,8 +784,6 @@ class PlayerEventHandler implements Listener {
 
 		playerData.lastDeathTimeStamp = now;
 	}
-    @EventHandler
-
 
 	private void onPlayerDisconnect(Player player, String notificationMessage) {
 		String playerName = player.getName();
@@ -830,19 +851,24 @@ class PlayerEventHandler implements Listener {
 
 	// when a player interacts with the world
 	@EventHandler(priority = EventPriority.LOWEST)
-	void onPlayerInteract(PlayerInteractEvent event) {
-
-		if (event == null)
-			return;
-		if (event.getPlayer() == null)
-			return; // MCPC seems to sometimes fire events with a null player...
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		// Null check for MCPC
 		Player player = event.getPlayer();
-		String ItemName = event.getItem() == null ? "null" : "ID:" + String.valueOf(event.getItem().getTypeId());
-		Debugger.Write("onPlayerInteract: Item:" + ItemName, DebugLevel.Verbose);
+		if (player == null) {
+			return;
+		}
+
+		ItemStack inHand = event.getItem();
+
+		// Debug
+		String itemName = inHand == null ? "null" : "Type: " + inHand.getType();
+		Debugger.Write("onPlayerInteract: Item:" + itemName, DebugLevel.Verbose);
 
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(player.getWorld());
-		if (!wc.Enabled())
+		if (! wc.Enabled()) {
 			return;
+		}
+
 		// determine target block. FEATURE: shovel and stick can be used from a
 		// distance away
 		Block clickedBlock = event.getClickedBlock();
@@ -860,12 +886,9 @@ class PlayerEventHandler implements Listener {
 					if (iur.TestPlayer(player, clickedBlock).Denied()) {
 						event.setCancelled(true);
 						return;
-
 					}
-
 				}
 			}
-
 		}
 
 		// this block shows some debug info, but only when DebuggingLevel is set
@@ -880,12 +903,10 @@ class PlayerEventHandler implements Listener {
 					sb.append(" " + clickedBlock.getState().getClass().getName());
 			}
 			sb.append(",");
-			if (event != null) {
-				if (event.getItem() != null) {
-					sb.append("Item:" + event.getItem().getType().name() + " ts:" + event.getItem().toString());
-
-				}
+			if (inHand != null) {
+				sb.append("Item:" + itemName + " ts:" + inHand.toString());
 			}
+
 			Debugger.Write(sb.toString(), DebugLevel.Verbose);
 		}
 
@@ -895,67 +916,62 @@ class PlayerEventHandler implements Listener {
 			GPTools.add(wc.getClaimsInvestigationTool());
 			GPTools.add(wc.getClaimsModificationTool());
 		}
+
 		// get material of the item that was used...
-		Material inhand = event.getItem() == null ? null : event.getItem().getType();
-		if (inhand != null && GPTools.contains(inhand)) {
+		Material type = inHand == null ? null : inHand.getType();
+		if (type != null && GPTools.contains(type)) {
 			// if the Tools HashSet contains the item used, apply 'selection
 			// extension' logic of interacting with air.
 			try {
-				clickedBlock = event.getClickedBlock(); // null returned here
-														// means interacting
-														// with air
+				clickedBlock = event.getClickedBlock(); // null returned here means interacting with air
 				if (clickedBlock == null || clickedBlock.getType() == Material.SNOW) {
 					// try to find a far away non-air block along line of sight
 					getTransparentMaterials();
 					clickedBlock = player.getTargetBlock(transparentMaterials, 250);
 				}
-			} catch (Exception e) // an exception intermittently comes from
-									// getTargetBlock(). when it does, just
-									// ignore the event
-			{
-				System.out.println("getTarget Exception");
+			} catch (Exception e) { // an exception intermittently comes from getTargetBlock(). when it does, just ignore the event
+				// dmulloy2 - use debugger instead of System.out.println
+				Debugger.Write("Encountered an exception while gettingTargetBlock(), ignoring.", DebugLevel.Verbose);
+//				System.out.println("getTarget Exception");
 				return;
 			}
 		}
+
 		// if no block, stop here
 		if (clickedBlock == null) {
-
 			return;
 		}
 
 		Material clickedBlockType = clickedBlock.getType();
 
-		//
-		PlayerData playerData = this.dataStore.getPlayerData(player.getName());
+		PlayerData playerData = dataStore.getPlayerData(player.getName());
 
-
-		if(clickedBlock.getType().name().equals("FLOWER_POT")){
+		if (clickedBlockType == Material.FLOWER_POT) {
             //flower pot, apply flower pot rules.
-            if(wc.getFlowerPotRules().Allowed(player.getLocation(),player,true).Denied()){
+            if (wc.getFlowerPotRules().Allowed(player.getLocation(),player,true).Denied()) {
                 event.setCancelled(true);
                 return;
             }
-        }
-        else if(clickedBlock.getType()==Material.ENDER_PORTAL_FRAME){
-            if(event.getItem().getType()==Material.EYE_OF_ENDER){
-                if(wc.getEnderEyePortalRules().Allowed(player.getLocation(),player,true).Denied()){
+        } else if (clickedBlock.getType()==Material.ENDER_PORTAL_FRAME) {
+        	if (event.hasItem() && event.getItem().getType() == Material.EYE_OF_ENDER) { // dmulloy2 - check if event has item first
+        		// Ender eye portal rules
+                if (wc.getEnderEyePortalRules().Allowed(player.getLocation(),player,true).Denied()) {
                     event.setCancelled(true);
+                    return;
                 }
             }
-
-
         }
+
 		// Apply rules for the leash. Leashes can be attached to fences and
 		// netherbrick fences, but require
 		// permission at the block location for the player.
 
-		if ((clickedBlock.getType() == Material.FENCE || clickedBlock.getType() == Material.NETHER_FENCE) && inhand != null && inhand.getId() == 420) {
-
+		if ((clickedBlock.getType() == Material.FENCE || clickedBlock.getType() == Material.NETHER_FENCE)
+				&& (type != null && type == Material.LEASH)) {
 			if (wc.getLeadUsageRules().Allowed(clickedBlock.getLocation(), player).Denied()) {
 				event.setCancelled(true);
 				return;
 			}
-
 		}
 
 		// apply rules for putting out fires (requires build permission)
@@ -965,10 +981,7 @@ class PlayerEventHandler implements Listener {
 				return;
 			}
 
-		}
-
-		else if (event.getClickedBlock() != null && event.getClickedBlock().getType() != Material.AIR && event.getItem() != null && wc.getAdministrationTool() == event.getItem().getType()) {
-
+		} else if (event.getClickedBlock() != null && event.getClickedBlock().getType() != Material.AIR && event.getItem() != null && wc.getAdministrationTool() == event.getItem().getType()) {
 			if (player.hasPermission(PermNodes.AdminToolPermission)) {
 				// if shifting, add to all worlds...
 				if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
@@ -982,8 +995,8 @@ class PlayerEventHandler implements Listener {
 
 				}
 			}
-
 		}
+
 		if (ContainerMaterials == null) {
 			ContainerMaterials = new HashSet<Material>();
 			ContainerMaterials.add(Material.WORKBENCH);

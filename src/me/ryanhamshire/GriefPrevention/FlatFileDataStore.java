@@ -41,7 +41,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
 //manages data stored in the file system
 public class FlatFileDataStore extends DataStore {
@@ -678,6 +677,7 @@ public class FlatFileDataStore extends DataStore {
 		}
 	}
 
+	@Override
 	public long getNextClaimID(){
 		return this.nextClaimID;
 	}

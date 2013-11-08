@@ -1,17 +1,18 @@
 package me.ryanhamshire.GriefPrevention.CommandHandling;
 
 
+import java.util.List;
+
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.TextMode;
 import me.ryanhamshire.GriefPrevention.tasks.WorldClaimCleanupTask;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 public class CleanClaimsCommand extends GriefPreventionCommand {
 
