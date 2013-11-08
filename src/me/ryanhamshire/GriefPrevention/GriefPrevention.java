@@ -1240,7 +1240,7 @@ public class GriefPrevention extends JavaPlugin {
 	 * 
 	 * @author dmulloy2
 	 */
-	public static String getUsefulStack(Exception e, String circumstance) {
+	public static String getUsefulStack(Throwable e, String circumstance) {
 		StringBuilder ret = new StringBuilder();
 		ret.append("Encountered an exception while " + circumstance + ":" + '\n');
 		ret.append(e.getClass().getName() + ": " + e.getMessage() + '\n');
