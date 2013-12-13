@@ -213,54 +213,57 @@ class EntityEventHandler implements Listener {
         //In Claim: Protected from everybody except the owner, Unless being ridden, in which case players with trust on that claim
         //can attack the horse.
         //this can be modelled by a rule but people don't like my rules framework *sadface*
-        if(attacker!=null && event.getEntity() instanceof Horse && ((Horse)event.getEntity()).isTamed()){
-            Horse h = (Horse)event.getEntity();
-            //if the attacker owns the horse, he can abuse it as he sees fit.
-            if(h.getOwner().getName().equals(attacker.getName()))
-            {
-                return;
-            }
-            if(claimatpos==null){
-
-                if(!attacker.getName().equals(h.getOwner().getName())){
-                    //deny
-                    String owner = h.getOwner()==null?"unknown":h.getOwner().getName();
-                    GriefPrevention.sendMessage(attacker,TextMode.Err,Messages.NoDamageClaimedEntity,owner);
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-            else {
-                //inside a claim. More tricky. It's allowed if the attacker has trust on the claim and the player riding the horse doesn't.
-                //if there is no rider, it is disallowed.
-                //Does the horse have a rider?
-                if(h.getPassenger()!=null && h.getPassenger() instanceof Player){
-                    Player rider = (Player)(h.getPassenger());
-                    //ok, does the attacker have Access Trust on the Claim? And does the attacker NOT
-                    //have that access?
-
-                    if(claimatpos.allowAccess(attacker)==null && claimatpos.allowAccess(rider)!=null){
-                        //indeed. Horse has a passenger, AND the attacker is in a claim they have trust in- allow it.
-                        event.setCancelled(false);
-                        return;
-                    }
-                    else {
-                        event.setCancelled(true);
-                        GriefPrevention.sendMessage(attacker,TextMode.Err,Messages.NoDamageClaimedEntity,rider.getName());
-                        return;
-                    }
-                }
-                else if(h.getPassenger()==null){
-                //not allowed. This may cause issues, as players can leave their horses in other peoples claims and cause problems.
-                //will be changed based on feedback. Looking at this it's funny because I could just use a rule for all of this. That's too complicated though :P
-                    String owner = h.getOwner()==null?"Unknown":h.getOwner().getName();
-                    GriefPrevention.sendMessage(attacker,TextMode.Err,Messages.NoDamageClaimedEntity,owner);
-                    event.setCancelled(true);
-                    return;
-                }
-            }
+        try{
+	        if(attacker!=null && event.getEntity() instanceof Horse && ((Horse)event.getEntity()).isTamed()){
+	            Horse h = (Horse)event.getEntity();
+	            //if the attacker owns the horse, he can abuse it as he sees fit.
+	            if(h.getOwner().getName().equals(attacker.getName()))
+	            {
+	                return;
+	            }
+	            if(claimatpos==null){
+	
+	                if(!attacker.getName().equals(h.getOwner().getName())){
+	                    //deny
+	                    String owner = h.getOwner()==null?"unknown":h.getOwner().getName();
+	                    GriefPrevention.sendMessage(attacker,TextMode.Err,Messages.NoDamageClaimedEntity,owner);
+	                    event.setCancelled(true);
+	                    return;
+	                }
+	            }
+	            else {
+	                //inside a claim. More tricky. It's allowed if the attacker has trust on the claim and the player riding the horse doesn't.
+	                //if there is no rider, it is disallowed.
+	                //Does the horse have a rider?
+	                if(h.getPassenger()!=null && h.getPassenger() instanceof Player){
+	                    Player rider = (Player)(h.getPassenger());
+	                    //ok, does the attacker have Access Trust on the Claim? And does the attacker NOT
+	                    //have that access?
+	
+	                    if(claimatpos.allowAccess(attacker)==null && claimatpos.allowAccess(rider)!=null){
+	                        //indeed. Horse has a passenger, AND the attacker is in a claim they have trust in- allow it.
+	                        event.setCancelled(false);
+	                        return;
+	                    }
+	                    else {
+	                        event.setCancelled(true);
+	                        GriefPrevention.sendMessage(attacker,TextMode.Err,Messages.NoDamageClaimedEntity,rider.getName());
+	                        return;
+	                    }
+	                }
+	                else if(h.getPassenger()==null){
+	                //not allowed. This may cause issues, as players can leave their horses in other peoples claims and cause problems.
+	                //will be changed based on feedback. Looking at this it's funny because I could just use a rule for all of this. That's too complicated though :P
+	                    String owner = h.getOwner()==null?"Unknown":h.getOwner().getName();
+	                    GriefPrevention.sendMessage(attacker,TextMode.Err,Messages.NoDamageClaimedEntity,owner);
+	                    event.setCancelled(true);
+	                    return;
+	                }
+	            }
+	        }
+        }catch(ClassNotFoundException){
+        	// We are using a version of bukkit that has no idea what a Horse is. What a silly thing to do.
         }
-
 
 
 
