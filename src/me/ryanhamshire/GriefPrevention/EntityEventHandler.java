@@ -261,7 +261,7 @@ class EntityEventHandler implements Listener {
 	                }
 	            }
 	        }
-        }catch(NoClassDefFoundError){
+        }catch(ClassNotFoundException){
         	// We are using a version of bukkit that has no idea what a Horse is. What a silly thing to do.
         }
 
