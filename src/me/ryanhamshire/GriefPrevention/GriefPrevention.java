@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,6 +96,9 @@ public class GriefPrevention extends JavaPlugin {
 	// for convenience, a reference to the instance of this plugin
 	public static GriefPrevention instance;
 	private static Logger log = Logger.getLogger("Minecraft");
+	
+	private static Map<String,Boolean> versionCache = new HashMap();
+	
 	// how long to wait before deciding a player is staying online or staying
 	// offline, for notication messages
 	public static final int NOTIFICATION_SECONDS = 20;
@@ -741,6 +746,30 @@ public class GriefPrevention extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(moveWatcher, this);
 
 	}
+
+	public boolean isVersion(String version){
+                return GriefPrevention.instance.getServer().getBukkitVersion().startsWith(version);
+        }
+        
+        public boolean isMinVersion(String version){
+                if(!versionCache.isEmpty() && versionCache.containsKey(version)){
+                        return versionCache.get(version);
+                }else{
+                        String bukkitVersion = GriefPrevention.instance.getServer().getBukkitVersion().split("-")[0];
+                        String[] splitBukkitVersion = bukkitVersion.split(".");
+                        String[] splitCheckVersion = version.split(".");
+                        boolean isMinVersion = true;
+                        for(int level = 0; level < splitBukkitVersion.length && level < splitCheckVersion.length ;level++){
+                                if(Integer.parseInt(splitBukkitVersion[level]) < Integer.parseInt(splitCheckVersion[level])){
+                                        isMinVersion = false;
+                                }else if(Integer.parseInt(splitBukkitVersion[level]) > Integer.parseInt(splitCheckVersion[level])){
+                                        break;
+                                }
+                        }
+                        versionCache.put(version,isMinVersion);
+                        return isMinVersion;
+                }
+        }
 
 	public boolean isHorse(Entity entitytest) {
 		try{
