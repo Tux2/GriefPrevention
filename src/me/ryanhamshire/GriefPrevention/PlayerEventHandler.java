@@ -2032,7 +2032,7 @@ class PlayerEventHandler implements Listener {
 				// This is for with creatures, the BlockEvent interaction
 				// handles interaction with Fence and Netherbrick fence
 				// blocks.
-				if (handItem!=null && handItem.getType() == Material.LEASH) {
+				if (handItem!=null && handItem.getType().getId() == 420) {
 					if (entity instanceof Tameable) {
 						if (((Tameable) entity).getOwner() == player) {
 							return;
