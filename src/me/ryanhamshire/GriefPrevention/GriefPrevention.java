@@ -952,12 +952,15 @@ public class GriefPrevention extends JavaPlugin {
 		// when datastore initializes, it loads player and claim data, and posts
 		// some stats to the log
 
-		if (this.config_Storage_Kind.equalsIgnoreCase("mysql")) {
-			DatabaseDataStore databaseStore = null;
+		if (this.config_Storage_Kind.equalsIgnoreCase("mysql")
+				|| this.config_Storage_Kind.equalsIgnoreCase("mongodb")) {
+			DataStore databaseStore = null;
 			try {
 				try {
-					databaseStore = new DatabaseDataStore(DataSettings, DataSettings);
-
+					if (this.config_Storage_Kind.equalsIgnoreCase("mysql"))
+						databaseStore = new DatabaseDataStore(DataSettings, DataSettings);
+					if(this.config_Storage_Kind.equalsIgnoreCase("mongodb"))
+						databaseStore = new MongoDataStore(DataSettings, DataSettings);
 				} catch (Exception exx) {
 					exx.printStackTrace();
 					try {
@@ -972,7 +975,10 @@ public class GriefPrevention extends JavaPlugin {
 					flatFileStore.migrateData(databaseStore);
 					GriefPrevention.AddLogEntry("Data migration process complete.  Reloading data from the database...");
 					databaseStore.close();
-					databaseStore = new DatabaseDataStore(DataSettings, DataSettings);
+					if (this.config_Storage_Kind.equalsIgnoreCase("mysql"))
+						databaseStore = new DatabaseDataStore(DataSettings, DataSettings);
+					if(this.config_Storage_Kind.equalsIgnoreCase("mongodb"))
+						databaseStore = new MongoDataStore(DataSettings, DataSettings);
 				}
 
 				this.dataStore = databaseStore;
