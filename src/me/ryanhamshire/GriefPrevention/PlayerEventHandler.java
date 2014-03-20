@@ -786,6 +786,10 @@ class PlayerEventHandler implements Listener {
 		String playerName = player.getName();
         PvPSafePlayerTask.ClearPlayerTasks(player);
 		final PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(playerName);
+        final PlayerData lastPvPData = playerData.lastPvpPlayer==null?null:GriefPrevention.instance.dataStore.getPlayerData(playerData.lastPvpPlayer);
+        if(playerData.lastPvpPlayer!=null){
+
+        }
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(player.getWorld());
 		if (!wc.Enabled())
 			return;
@@ -799,16 +803,28 @@ class PlayerEventHandler implements Listener {
         //tweak: delay for 10 seconds before we perform this check...
 		if (wc.getPvPPunishLogout() && playerData.inPvpCombat()) {
             final PlayerInventory dcedInventory = player.getInventory();
-
+            Debugger.Write("Disconnected player:" + player.getName() + " was in PVP Combat.",DebugLevel.Verbose);
             Bukkit.getScheduler().runTaskLater(GriefPrevention.instance, new Runnable() {
                   public void run(){
+                      Debugger.Write("Punishment Task, player:" + player.getName(),DebugLevel.Verbose);
+
+
+
                       //if the last player this Player attacked is still online...
-                      Player lastplayer = Bukkit.getPlayerExact(playerData.lastPvpPlayer);
-                      Player thisPlayer = Bukkit.getPlayerExact(playerData.playerName);
-                      if(lastplayer!=null && lastplayer.isOnline() && !(thisPlayer==null || thisPlayer.isOnline())){
+                      Player lastplayer = lastPvPData==null?null:Bukkit.getPlayerExact(lastPvPData.playerName);
+                      OfflinePlayer thisPlayer = Bukkit.getOfflinePlayer(playerData.playerName);
+
+                      Debugger.Write("Logged player:" + player.getName() + " online:" + thisPlayer.isOnline(),DebugLevel.Verbose);
+                      if(lastplayer==null) Debugger.Write("No other player.",DebugLevel.Verbose);
+                      else Debugger.Write("other Player:" + lastplayer.getName(),DebugLevel.Verbose);
+                      Debugger.Write("lastplayer!=null && lastplayer.isOnline:" + (lastplayer!=null && lastplayer.isOnline()),DebugLevel.Verbose);
+                      Debugger.Write("!(thisPlayer==null || thisPlayer.isOnline())" + (!(thisPlayer==null || thisPlayer.isOnline())),DebugLevel.Verbose);
+                      if(lastplayer!=null && lastplayer.isOnline() && (thisPlayer==null || !thisPlayer.isOnline())){
+
                           //make sure they didn't relog, either.
                           //I'm fairly certain this won't drop their items, since they DC'd.
-                          //as such, let's hope we can access the inventory of offline players.
+                          //so we need to drop it manually.
+
 
                           GriefPrevention.sendMessage(lastplayer,TextMode.Info,Messages.PvPLogAnnouncement,player.getName());
 
@@ -831,7 +847,7 @@ class PlayerEventHandler implements Listener {
                   }
 
 
-            },20*10);
+            },20*5);
 
 
 		}
@@ -1345,23 +1361,25 @@ class PlayerEventHandler implements Listener {
 
 
 
-			else if (materialInHand == Material.BOAT) {
-				Claim claim = GriefPrevention.instance.dataStore.getClaimAt(relevantPosition, false);
-				if (claim != null) {
-					String noAccessReason = claim.allowAccess(player);
-					if (noAccessReason != null) {
-						GriefPrevention.sendMessage(player, TextMode.Err, noAccessReason);
-						event.setCancelled(true);
-					}
-				}
+			if (materialInHand == Material.BOAT) {
+                if(wc.getBoatPlacement().Allowed(relevantPosition,player).Denied()){
+                    event.setCancelled(true);
 
-				return;
+                }
+                return;
+
 			}
+            else if(materialInHand==Material.MINECART){
+                if(wc.getMinecartPlacement().Allowed(relevantPosition,player).Denied()){
+                    event.setCancelled(true);
 
+                }
+                return;
+            }
 
 			// if it's a spawn egg, minecart, or boat, and this is a creative
 			// world, apply special rules
-			else if (materialInHand == Material.MINECART || materialInHand == Material.POWERED_MINECART || materialInHand == Material.STORAGE_MINECART || materialInHand == Material.HOPPER_MINECART || materialInHand == Material.EXPLOSIVE_MINECART || materialInHand == Material.BOAT && GriefPrevention.instance.creativeRulesApply(clickedBlock.getLocation())) {
+			else if (materialInHand == Material.POWERED_MINECART || materialInHand == Material.STORAGE_MINECART || materialInHand == Material.HOPPER_MINECART || materialInHand == Material.EXPLOSIVE_MINECART && GriefPrevention.instance.creativeRulesApply(clickedBlock.getLocation())) {
 				// player needs build permission at this location
 				String noBuildReason = GriefPrevention.instance.allowBuild(player, relevantPosition);
 				if (noBuildReason != null) {
@@ -1915,7 +1933,7 @@ class PlayerEventHandler implements Listener {
 				String noEditReason = claim.allowEdit(player);
 				if (noEditReason == null) {
 					// if he clicked on a corner, start resizing it
-					if ((clickedBlock.getX() == claim.getLesserBoundaryCorner().getBlockX() || clickedBlock.getX() == claim.getGreaterBoundaryCorner().getBlockX()) && (clickedBlock.getZ() == claim.getLesserBoundaryCorner().getBlockZ() || clickedBlock.getZ() == claim.getGreaterBoundaryCorner().getBlockZ())) {
+					if (playerData.claimResizing==null && (clickedBlock.getX() == claim.getLesserBoundaryCorner().getBlockX() || clickedBlock.getX() == claim.getGreaterBoundaryCorner().getBlockX()) && (clickedBlock.getZ() == claim.getLesserBoundaryCorner().getBlockZ() || clickedBlock.getZ() == claim.getGreaterBoundaryCorner().getBlockZ())) {
 						playerData.claimResizing = claim;
 						playerData.lastShovelLocation = clickedBlock.getLocation();
 						// TODO: Raise ClaimResizeBegin Event here
@@ -2228,6 +2246,19 @@ class PlayerEventHandler implements Listener {
 				}
 
 			}
+            else if(entity instanceof Boat){
+                if(wc.getBoatRiding().Allowed(entity.getLocation(),player,true).Denied()){
+                    event.setCancelled(true);
+                    return;
+                }
+
+            }
+            else if(entity instanceof Minecart){
+                if(wc.getMinecartRiding().Allowed(entity.getLocation(),player,true).Denied()){
+                    event.setCancelled(true);
+                    return;
+                }
+            }
 
 			if (entity instanceof Creature) {
 				// check for usage of Leads.
@@ -2277,7 +2308,7 @@ class PlayerEventHandler implements Listener {
 						return;
 					}
 
-				} else if (handItem!=null && (handItem.getType() == Material.WHEAT || handItem.getType() == Material.HAY_BLOCK || handItem.getType() == Material.APPLE || handItem.getType() == Material.GOLDEN_APPLE)) {
+				} else if (handItem!=null && h.getHealth() < h.getMaxHealth() && (handItem.getType() == Material.WHEAT || handItem.getType() == Material.HAY_BLOCK || handItem.getType() == Material.APPLE || handItem.getType() == Material.GOLDEN_APPLE)) {
 					// apply feeding rules.
 					if (wc.getFeedingRules().Allowed(h, player).Denied()) {
 						event.setCancelled(true);
@@ -2656,6 +2687,8 @@ class PlayerEventHandler implements Listener {
             player.getInventory().clear();
 
             player.getInventory().setArmorContents( new ItemStack[4]);
+            //send them the inventory clear message.
+            GriefPrevention.sendMessage(player,TextMode.Err,Messages.PvPPunished);
 
             //now we kill them off.
             //we clear it first so they do not drop their inventory, since it was already

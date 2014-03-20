@@ -546,6 +546,11 @@ public class WorldConfig {
 
     private ClaimBehaviourData Riding_Horse;
 
+    private ClaimBehaviourData Placement_Boat;
+    private ClaimBehaviourData Placement_Minecart;
+
+    public ClaimBehaviourData getBoatPlacement(){ return Placement_Boat;}
+    public ClaimBehaviourData getMinecartPlacement() { return Placement_Minecart;}
     public ClaimBehaviourData getBoatRiding(){ return Riding_Boat;}
     public ClaimBehaviourData getMinecartRiding(){ return Riding_Minecart;}
     public ClaimBehaviourData getPigRiding(){ return Riding_Pig;}
@@ -647,12 +652,7 @@ public class WorldConfig {
 
     private ClaimBehaviourData TNTExplosionsBehaviour;
 
-    private ClaimBehaviourData TNTCoalesceBehaviour;
 
-    public ClaimBehaviourData getTNTCoalesceBehaviour() {
-
-        return TNTCoalesceBehaviour;
-    }
 
     private ClaimBehaviourData TrapDoors;
 
@@ -776,7 +776,7 @@ public class WorldConfig {
            HorseTrust = oldHorseTrust?HorseTrustConstants.Extended:HorseTrustConstants.Standard;
         }
         else {
-           String newHorseTrust = config.getString("GriefPrevention.HorseTrust");
+           String newHorseTrust = config.getString("GriefPrevention.HorseTrust","");
             try {
             this.HorseTrust =  HorseTrustConstants.valueOf(newHorseTrust);
             }
@@ -786,7 +786,7 @@ public class WorldConfig {
             }
         }
         outConfig.set("GriefPrevention.HorseTrust",HorseTrust.name());
-        String SiegeDefenderStr = config.getString("GriefPrevention.SiegeDefendable", ClaimBehaviourMode.RequireOwner.name());
+        String SiegeDefenderStr = config.getString("GriefPrevention.SiegeDefendable", "RequireOwner");
         ClaimBehaviourMode ccm = ClaimBehaviourMode.parseMode(SiegeDefenderStr);
         outConfig.set("GriefPrevention.SiegeDefendable",SiegeDefenderStr);
         if (ccm == null) SiegeDefender = ClaimBehaviourMode.RequireOwner;
@@ -1236,7 +1236,7 @@ public class WorldConfig {
         outConfig.set("GriefPrevention.PvP.ProtectPlayersInLandClaims.PlayerOwnedClaims", this.config_pvp_noCombatInPlayerLandClaims);
         outConfig.set("GriefPrevention.PvP.ProtectPlayersInLandClaims.AdministrativeClaims", this.config_pvp_noCombatInAdminLandClaims);
 
-        this.SpawnProtectEnabled = config.getBoolean("GriefPrevention.PvP.ProtectFreshSpawns", true);
+        //this.SpawnProtectEnabled = config.getBoolean("GriefPrevention.PvP.ProtectFreshSpawns", true);
         // outConfig.set("GriefPrevention.Claims.Worlds",
         // claimsEnabledWorldNames);
         // outConfig.set("GriefPrevention.Claims.CreativeRulesWorlds",
@@ -1289,16 +1289,46 @@ public class WorldConfig {
         outConfig.set("GriefPrevention.Mods.BlockIdsRequiringContainerTrust", containerTrustStrings);
         this.BlockBreakOverrides = new PlaceBreakOverrides(config, outConfig, "GriefPrevention.Rules.BreakOverrides", PlaceBreakOverrides.Default);
         this.BlockPlaceOverrides = new PlaceBreakOverrides(config, outConfig, "GriefPrevention.Rules.PlaceOverrides", PlaceBreakOverrides.Default);
-        this.SilverfishBreakRules = new ClaimBehaviourData("Silverfish Break", config, outConfig, "GriefPrevention.Rules.SilverfishBreak", new ClaimBehaviourData("Silverfish Break", PlacementRules.Both, PlacementRules.Neither, ClaimBehaviourMode.Disabled));
         this.config_BlockPlacementRules = BlockPlacementRules.ParseRules(config, outConfig, "GriefPrevention.BlockPlacementRules");
         this.config_BlockBreakRules = BlockPlacementRules.ParseRules(config, outConfig, "GriefPrevention.BlockBreakRules");
+        this.PlaceBlockRules = new ClaimBehaviourData("Block Placement", config, outConfig, "GriefPrevention.Rules.BlockPlacement", new ClaimBehaviourData("Block Placement", PlacementRules.Both, PlacementRules.Both, ClaimBehaviourMode.RequireBuild).setPVPOverride(SiegePVPOverrideConstants.Deny).setSiegeOverrides(SiegePVPOverrideConstants.Deny, SiegePVPOverrideConstants.Deny));
+        this.BreakBlockRules = new ClaimBehaviourData("Block Breaking", config, outConfig, "GriefPrevention.Rules.BlockBreaking", new ClaimBehaviourData("Block Breaking", PlacementRules.Both, PlacementRules.Both, ClaimBehaviourMode.RequireBuild).setPVPOverride(SiegePVPOverrideConstants.Deny).setSiegeOverrides(SiegePVPOverrideConstants.Allow, SiegePVPOverrideConstants.Deny));
+
+        boolean nosurvivalbuilding = config.getBoolean("GriefPrevention.NoSurvivalBuildingOutsideClaims",false);
+        if(nosurvivalbuilding){
+            outConfig.set("GriefPrevention.NoSurvivalBuildingOutsideClaims",true);
+            GriefPrevention.AddLogEntry("NoSurvivalBuildingOutsideClaims option detected: attempting conversion to appropriate overrides.");
+            //PlaceBlockRules = ClaimBehaviourData.getAll("Block Placement").setBehaviourMode(ClaimBehaviourMode.RequireBuild);
+            PlaceBlockRules = new ClaimBehaviourData("Block Placement",
+                    new PlacementRules(PlacementRules.BasicPermissionConstants.Force_Deny,PlacementRules.BasicPermissionConstants.Force_Deny),
+                    PlacementRules.Both,
+                    ClaimBehaviourMode.RequireBuild).setPVPOverride(SiegePVPOverrideConstants.Deny).setSiegeOverrides(SiegePVPOverrideConstants.Allow, SiegePVPOverrideConstants.Deny);
+            BreakBlockRules =
+                    new ClaimBehaviourData("Block Breaking",
+                            new PlacementRules(PlacementRules.BasicPermissionConstants.Force_Deny,PlacementRules.BasicPermissionConstants.Force_Deny),
+                            PlacementRules.Both,
+                            ClaimBehaviourMode.RequireBuild).setPVPOverride(SiegePVPOverrideConstants.Deny).setSiegeOverrides(SiegePVPOverrideConstants.Allow, SiegePVPOverrideConstants.Deny);
+            //create an override for chests and trapped chests.
+            Material[] addforMaterials = new Material[]{Material.CHEST,Material.TRAPPED_CHEST};
+            for(Material overridemat:addforMaterials){
+                this.getBlockPlaceOverrides().AddOverride("Chests:" + overridemat.name(),overridemat.getId(),
+                        ClaimBehaviourData.getOutsideClaims("Chests" + overridemat.name()).setBehaviourMode(ClaimBehaviourMode.RequireBuild).addSpecialRule(ClaimBehaviourData.SpecialRules.ClaimRule_RequireNoClaims));
+            }
+
+
+            Debugger.Write(this.getBlockPlaceOverrides().toString(),DebugLevel.Verbose);
+        }
+
+        this.SilverfishBreakRules = new ClaimBehaviourData("Silverfish Break", config, outConfig, "GriefPrevention.Rules.SilverfishBreak", new ClaimBehaviourData("Silverfish Break", PlacementRules.Both, PlacementRules.Neither, ClaimBehaviourMode.Disabled));
+
+
+
         // outConfig.set("GriefPrevention.Mods.BlockIdsExplodable",
         // explodableStrings);
 
         //placement requires build permission by default, and isn't allowed during PVP or Siege.
 
-        this.PlaceBlockRules = new ClaimBehaviourData("Block Placement", config, outConfig, "GriefPrevention.Rules.BlockPlacement", new ClaimBehaviourData("Block Placement", PlacementRules.Both, PlacementRules.Both, ClaimBehaviourMode.RequireBuild).setPVPOverride(SiegePVPOverrideConstants.Deny).setSiegeOverrides(SiegePVPOverrideConstants.Deny, SiegePVPOverrideConstants.Deny));
-        this.BreakBlockRules = new ClaimBehaviourData("Block Breaking", config, outConfig, "GriefPrevention.Rules.BlockBreaking", new ClaimBehaviourData("Block Breaking", PlacementRules.Both, PlacementRules.Both, ClaimBehaviourMode.RequireBuild).setPVPOverride(SiegePVPOverrideConstants.Deny).setSiegeOverrides(SiegePVPOverrideConstants.Allow, SiegePVPOverrideConstants.Deny));
+
         this.FireDestroyBehaviour = new ClaimBehaviourData("Fire Destruction", config, outConfig, "GriefPrevention.Rules.FireDestroys", new ClaimBehaviourData("GriefPrevention.Rules.FireDestroys", PlacementRules.Neither, PlacementRules.Neither, ClaimBehaviourMode.Disabled));
         this.FireSpreadOriginBehaviour = new ClaimBehaviourData("Fire Spread Origin", config, outConfig, "GriefPrevention.Rules.FireSpreadOrigin", new ClaimBehaviourData("Fire Spread Origin", PlacementRules.Neither, PlacementRules.Neither, ClaimBehaviourMode.Disabled));
         this.FireSpreadTargetBehaviour = new ClaimBehaviourData("Fire Spread Target", config, outConfig, "GriefPrevention.Rules.FireSpreadTarget", new ClaimBehaviourData("Fire Spread Target", PlacementRules.Neither, PlacementRules.Neither, ClaimBehaviourMode.Disabled));
@@ -1314,8 +1344,7 @@ public class WorldConfig {
                 new ClaimBehaviourData("Ender Dragon Damage", PlacementRules.AboveOnly, PlacementRules.Both, ClaimBehaviourMode.Disabled).setSeaLevelOffsets(SeaLevelOverrideTypes.Offset, -1));
         this.EnderDragonDamageBlockBehaviour = new ClaimBehaviourData("Ender Dragon Block Damage",config,outConfig,"GriefPrevention.Rules.EnderDragonDamage",
                 new ClaimBehaviourData("Ender Dragon Block Damage", PlacementRules.AboveOnly, PlacementRules.Both, ClaimBehaviourMode.Disabled).setSeaLevelOffsets(SeaLevelOverrideTypes.Offset, -1));
-        this.TNTCoalesceBehaviour = new ClaimBehaviourData("TNT Coalescing", config, outConfig, "GriefPrevention.Rules.TNTCoalesce",
-                ClaimBehaviourData.getAll("TNT Coalescing").setSiegeOverrides(SiegePVPOverrideConstants.None, SiegePVPOverrideConstants.None, SiegePVPOverrideConstants.Allow));
+
         this.EnderEyePortalRules = new ClaimBehaviourData("Ender Portal Fill", config, outConfig, "GriefPrevention.Rules.EnderPortalFill",
                 ClaimBehaviourData.getAll("Ender Portal Fill").setBehaviourMode(ClaimBehaviourMode.RequireBuild));
         this.FlowerPotRules = new ClaimBehaviourData("Flower Pots", config, outConfig, "GriefPrevention.Rules.FlowerPots",
@@ -1348,12 +1377,33 @@ public class WorldConfig {
         this.VehicleDamage = new ClaimBehaviourData("Vehicle Damage", config, outConfig, "GriefPrevention.Rules.VehicleDamage", ClaimBehaviourData.getAll("Vehicle Damage").setBehaviourMode(ClaimBehaviourMode.RequireContainer));
         this.EnvironmentalVehicleDamage = new ClaimBehaviourData("Environmental Vehicle Damage", config, outConfig, "GriefPrevention.Rules.EnvironmentalVehicleDamage", ClaimBehaviourData.getOutsideClaims("Environmental Vehicle Damage"));
         //WIP: not applicable for this commit...
-        /*ClaimBehaviourData vehiclerule = new ClaimBehaviourData("Vehicle Boarding",config,outConfig,"GriefPrevention.Rules.VehicleBoarding")
+        ClaimBehaviourData vehiclerule = new ClaimBehaviourData("Vehicle Boarding",config,outConfig,"GriefPrevention.Rules.VehicleBoarding",
+                ClaimBehaviourData.getAll("Vehicle Boarding").setBehaviourMode(ClaimBehaviourMode.RequireContainer));
         if(isValidRule(config,"GriefPrevention.Rules.VehicleBoarding")){
-           Riding_Boat=Riding_Minecart=Riding_Horse=Riding_Pig =
+           Riding_Pig = Riding_Horse = vehiclerule;
 
         }
-          */
+
+        //Pig,Boat,Minecart, Horse.
+        if(isValidRule(config,"GriefPrevention.Rules.Riding.Boat")){
+            Riding_Boat = new ClaimBehaviourData("Boat Riding",config,outConfig,
+                    "GriefPrevention.Rules.Riding.Boat",
+                    ClaimBehaviourData.getAll("Boat Riding").setBehaviourMode(ClaimBehaviourMode.RequireContainer));
+        }
+        else {
+            Riding_Boat = vehiclerule;
+        }
+        if(isValidRule(config,"GriefPrevention.Rules.Riding.Minecart")){
+            Riding_Minecart = new ClaimBehaviourData("Minecart Riding",config,outConfig,
+                    "GriefPrevention.Rules.Riding.Minecart",
+            ClaimBehaviourData.getAll("Minecart Riding").setBehaviourMode(ClaimBehaviourMode.RequireContainer));
+        }
+        Placement_Boat =new ClaimBehaviourData("Boat Placement",config,outConfig,
+                "GriefPrevention.Rules.VehiclePlacement.Boat",
+                ClaimBehaviourData.getAll("Boat Placement").setBehaviourMode(ClaimBehaviourMode.RequireBuild));
+        Placement_Minecart = new ClaimBehaviourData("Minecart Placement",config,outConfig,
+                "GriefPrevention.Rules.VehiclePlacement.Minecart",
+                ClaimBehaviourData.getAll("Minecart Placement").setBehaviourMode(ClaimBehaviourMode.RequireBuild));
 
         this.ZombieDoorBreaking = new ClaimBehaviourData("Zombie Door Breaking", config, outConfig, "GriefPrevention.Rules.ZombieDoorBreaking", ClaimBehaviourData.getNone("Zombie Door Breaking"));
         SheepShearingRules = new ClaimBehaviourData("Sheep Shearing", config, outConfig, "GriefPrevention.Rules.SheepShearing", ClaimBehaviourData.getAll("Sheep Shearing").setBehaviourMode(ClaimBehaviourMode.RequireContainer));

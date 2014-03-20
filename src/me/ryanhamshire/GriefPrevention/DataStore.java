@@ -90,24 +90,22 @@ public abstract class DataStore {
 		// ClaimCreatedEvent createevent = new ClaimCreatedEvent();
 		// ClaimCreatedEvent ev
 
+        // Get a unique identifier for the claim which will be used to name the
+        // file on disk
+        if (newClaim.id == null) {
+            newClaim.id = this.nextClaimID;
+            this.incrementNextClaimID();
+        }
 		// subdivisions are easy
 		if (newClaim.parent != null) {
-			if (newClaim.subClaimid == null) {
-				GriefPrevention.AddLogEntry("Setting Subclaim ID to:" + String.valueOf(1 + newClaim.parent.children.size()));
-				newClaim.subClaimid = (long) (newClaim.parent.children.size() + 1);
-			}
+
 			newClaim.parent.children.add(newClaim);
 			newClaim.inDataStore = true;
 			this.saveClaim(newClaim);
 			return;
 		}
 
-		// Get a unique identifier for the claim which will be used to name the
-		// file on disk
-		if (newClaim.id == null) {
-			newClaim.id = this.nextClaimID;
-			this.incrementNextClaimID();
-		}
+
 
 		// add it and mark it as added
 		int j = 0;
@@ -119,6 +117,8 @@ public abstract class DataStore {
 		// owner's playerData with the new claim
 		if (!newClaim.isAdminClaim()) {
 			PlayerData ownerData = this.getPlayerData(newClaim.getOwnerName());
+
+            if(!containsClaim(newClaim,ownerData.claims))
 			ownerData.claims.add(newClaim);
 			this.savePlayerData(newClaim.getOwnerName(), ownerData);
 		}
@@ -126,7 +126,17 @@ public abstract class DataStore {
 		// make sure the claim is saved to disk
 		this.saveClaim(newClaim);
 	}
+    private boolean containsClaim(Claim check,Vector<Claim> claimslook){
+        for(Claim c:claimslook){
 
+            if(c.getLesserBoundaryCorner().equals(check.getLesserBoundaryCorner()) &&
+                    c.getGreaterBoundaryCorner().equals(check.getGreaterBoundaryCorner() )
+                    && (c.getLesserBoundaryCorner().getWorld().equals(check.getLesserBoundaryCorner().getWorld())))
+                return true;
+
+        }
+        return false;
+    }
 	private void addDefault(HashMap<String, CustomizableMessage> defaults, Messages id, String text, String notes) {
 		CustomizableMessage message = new CustomizableMessage(id, text, notes);
 		defaults.put(id.name(), message);
@@ -238,7 +248,9 @@ public abstract class DataStore {
 		CreateClaimResult result = new CreateClaimResult();
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(world);
 		int smallx, bigx, smally, bigy, smallz, bigz;
-
+        if(parent!=null){
+            Debugger.Write("Creating Subclaim of Claim with ID:" + parent.getID(),DebugLevel.Verbose);
+        }
 		Player gotplayer = Bukkit.getPlayer(ownerName);
 		// determine small versus big inputs
 		if (x1 < x2) {
@@ -1079,7 +1091,7 @@ public abstract class DataStore {
 		this.addDefault(defaults, Messages.AdminClaimsMode, "Administrative claims mode active.  Any claims created will be free and editable by other administrators.", null);
 		this.addDefault(defaults, Messages.BasicClaimsMode, "Returned to basic claim creation mode.", null);
 		this.addDefault(defaults, Messages.SubdivisionMode, "Subdivision mode.  Use your shovel to create subdivisions in your existing claims.  Use /basicclaims to exit.", null);
-		this.addDefault(defaults, Messages.SubdivisionDemo, "Land Claim Help:  http://tinyurl.com/7urdtue", null);
+		this.addDefault(defaults, Messages.SubdivisionDemo, "Land Claim Help:  http://youtu.be/I3FLCFam5LI", null);
 		this.addDefault(defaults, Messages.DeleteClaimMissing, "There's no claim here.", null);
 		this.addDefault(defaults, Messages.DeletionSubdivisionWarning, "This claim includes subdivisions.  If you're sure you want to delete it, use /DeleteClaim again.", null);
 		this.addDefault(defaults, Messages.DeleteLockedClaimWarning, "This claim is locked.  If you're sure you want to delete it, use /DeleteClaim again.", null);
@@ -1141,8 +1153,8 @@ public abstract class DataStore {
 		this.addDefault(defaults, Messages.RemainingBlocksWorld, "You may claim up to {0} more blocks in this world.", "0: remaining blocks in world");
 
 		this.addDefault(defaults, Messages.RemainingClaimsWorld, "You may make {0} more claims in this world.", "0: remaining claims in world.");
-		this.addDefault(defaults, Messages.CreativeBasicsDemoAdvertisement, "Land Claim Help:  http://tinyurl.com/c7bajb8", null);
-		this.addDefault(defaults, Messages.SurvivalBasicsDemoAdvertisement, "Land Claim Help:  http://tinyurl.com/6nkwegj", null);
+		this.addDefault(defaults, Messages.CreativeBasicsDemoAdvertisement, "Land Claim Help:  http://youtu.be/of88cxVmfSM", null);
+		this.addDefault(defaults, Messages.SurvivalBasicsDemoAdvertisement, "Land Claim Help:  http://youtu.be/VDsjXB-BaE0", null);
 		this.addDefault(defaults, Messages.TrappedChatKeyword, "trapped", "When mentioned in chat, players get information about the /trapped command.");
 		this.addDefault(defaults, Messages.TrappedInstructions, "Are you trapped in someone's land claim?  Try the /trapped command.", null);
 		this.addDefault(defaults, Messages.PvPNoDrop, "You can't drop items while in PvP combat.", null);
@@ -1270,7 +1282,7 @@ public abstract class DataStore {
         this.addDefault(defaults,Messages.PvPPunishDefenderWarning,"{0} has engaged you in PVP combat! fight or run away, but if you log out while in combat you will lose your inventory!","0:player engaging combat");
         this.addDefault(defaults,Messages.PvPPunishAttackerWarning,"You have engaged {0} in PVP combat! fight or run away, but if you log out while in combat you will lose your inventory!","0:player engaging combat");
         this.addDefault(defaults,Messages.PvPLogoutSafely,"You are no longer PvP Flagged. You may safely logout.",null);
-
+        this.addDefault(defaults,Messages.PvPPunished,"You have been punished for Logging out during a siege or PvP. You were warned...",null);
 		// load the config file
 		FileConfiguration config = YamlConfiguration.loadConfiguration(new File(messagesFilePath));
 

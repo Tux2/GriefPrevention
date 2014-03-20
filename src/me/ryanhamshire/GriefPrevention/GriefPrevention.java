@@ -275,6 +275,7 @@ public class GriefPrevention extends JavaPlugin {
 	private MovementWatcher moveWatcher = null;
 
 	public RegExTestHelper OreBlockRegexHelper;
+
 	public WorldWatcher ww = new WorldWatcher();
     public String allowBreak(Player player,Location location){
         return allowBreak(player,location,true);
@@ -610,7 +611,7 @@ public class GriefPrevention extends JavaPlugin {
 	 * @param world
 	 *            World to retrieve configuration for.
 	 * @return WorldConfig representing the configuration of the given world.
-	 * @see getWorldCfg
+	 *
 	 */
 	public WorldConfig getWorldCfg(World world) {
 		return Configuration.getWorldConfig(world);
@@ -798,7 +799,7 @@ public class GriefPrevention extends JavaPlugin {
 		// cancel ALL pending tasks.
 		Bukkit.getScheduler().cancelTasks(this);
         ClaimTask = null;
-		
+		GriefPrevention.AddLogEntry("GriefPrevention is being Disabled.");
 		if(dataStore!=null) this.dataStore.saveClaimData();
 
 		GPUnloadEvent uevent = new GPUnloadEvent(this);
@@ -811,13 +812,16 @@ public class GriefPrevention extends JavaPlugin {
                 Player player = players[i];
                 String playerName = player.getName();
                 PlayerData playerData = this.dataStore.getPlayerData(playerName);
+                Debugger.Write("Saving Player Data for Player:" + playerName,DebugLevel.Verbose);
                 this.dataStore.savePlayerData(playerName, playerData);
             }
             if(ww!=null){
               for (World iterate : Bukkit.getWorlds()) {
+                  Debugger.Write("Unloading World:" + iterate.getName(),DebugLevel.Verbose);
                   ww.WorldUnload(new WorldUnloadEvent(iterate));
               }
             }
+
             this.dataStore.close();
             dataStore=null;
         }
