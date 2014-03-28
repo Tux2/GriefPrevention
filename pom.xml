@@ -2,17 +2,18 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.ryanhamshire</groupId>
     <artifactId>GriefPrevention</artifactId>
-    <version>7.8-SNAPSHOT</version>
+    <version>7.8-SMC</version>
     <name>GriefPrevention</name>
 	<url>http://dev.bukkit.org/bukkit-plugins/grief-prevention/</url>
 
     <properties>
         <depend-dir>C:\dependencies</depend-dir>
         <!-- Versions of dependencies, just update the version numbers here -->
-        <mc-ver>1.6.2</mc-ver>
+        <mc-ver>1.7.2</mc-ver>
         <bukkit-ver>R0.1</bukkit-ver>
         <vault-ver>1.2.16</vault-ver>
         <mv-ver>2.5</mv-ver>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
@@ -30,25 +31,30 @@
             <id>OnARandomBox</id> <!-- Multiverse-Core -->
             <url>http://repo.onarandombox.com/content/repositories/multiverse</url>
         </repository>
+        
+    <repository>
+        <id>project.local</id>
+        <name>project</name>
+        <url>file:${project.basedir}/repo</url>
+    </repository>
     </repositories>
     
     <dependencies>
         <!-- Unmanaged Dependencies -->
+
+
+    
         <dependency>
             <groupId>com.bergerkiller.bukkit.mw</groupId>
             <artifactId>MyWorlds</artifactId>
-            <systemPath>${depend-dir}\MyWorlds-1.66.jar</systemPath>
-            <version>1.66</version>
-            <scope>system</scope>
+			<version>1.66</version>
             <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>com.frdfsnlght.transporter</groupId>
             <artifactId>Transporter</artifactId>
-            <systemPath>${depend-dir}\Transporter.jar</systemPath>
-            <version>8.14</version>
-            <scope>system</scope>
+     		 <version>1.66</version>
             <optional>true</optional>
         </dependency>
 
@@ -56,7 +62,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.6.4-R0.1-SNAPSHOT</version>
+            <version>1.7.2-R0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
