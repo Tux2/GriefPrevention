@@ -1,5 +1,5 @@
 /*
-    GriefPrevention Server Plugin for Minecraft
+//    GriefPrevention Server Plugin for Minecraft
     Copyright (C) 2012 Ryan Hamshire
 
     This program is free software: you can redistribute it and/or modify
@@ -21,20 +21,24 @@ package me.ryanhamshire.GriefPrevention;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.ryanhamshire.GriefPrevention.Configuration.BlockPlacementRules;
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.Configuration.ClaimBehaviourData;
 import me.ryanhamshire.GriefPrevention.Configuration.WorldConfig;
 import me.ryanhamshire.GriefPrevention.visualization.Visualization;
 import me.ryanhamshire.GriefPrevention.visualization.VisualizationType;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World.Environment;
-import org.bukkit.block.*;
+import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -61,6 +65,8 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.material.Dispenser;
+import org.bukkit.material.MaterialData;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -903,7 +909,7 @@ public class BlockEventHandler implements Listener {
 	// or item across a claim boundary
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
 	public void onDispense(BlockDispenseEvent dispenseEvent) {
-
+		if	(dispenseEvent.getItem().getType() == Material.BUCKET || dispenseEvent.getItem().getType() == Material.WATER_BUCKET || dispenseEvent.getItem().getType() == Material.LAVA_BUCKET){
 		// from where?
 		WorldConfig wc = GriefPrevention.instance.getWorldCfg(dispenseEvent.getBlock().getWorld());
 		if(!wc.Enabled()) return;
@@ -912,38 +918,110 @@ public class BlockEventHandler implements Listener {
 			return;
 		
 
-		
-		// to where?
-		Vector velocity = dispenseEvent.getVelocity();
+		//to where? - Test with block face
+		MaterialData mat = fromBlock.getState().getData(); 
+		Dispenser disp_mat = (Dispenser)mat;
+		BlockFace face = disp_mat.getFacing();
+		//Bukkit.broadcastMessage("The block is facing = " + face); 	
 		int xChange = 0;
 		int zChange = 0;
 		int yChange = 0;
-		velocity.normalize();
-		float xAbs = (float) Math.abs(velocity.getX());
-		float yAbs = (float) Math.abs(velocity.getY());
-		float zAbs = (float) Math.abs(velocity.getZ());
-
-		if (xAbs > yAbs && xAbs > zAbs) {
-			// x is main direction.
-			xChange = (int) Math.signum(velocity.getX());
-		} else if (yAbs > xAbs && yAbs > zAbs) {
-			// y is main direction.
-			yChange = (int) Math.signum(velocity.getY());
+		if (face.toString().equalsIgnoreCase("north")) {
+			//Going North
+			zChange = -1;
+		} else if (face.toString().equalsIgnoreCase("east")) { 
+			//Going East
+			xChange = 1;
+		} else if (face.toString().equalsIgnoreCase("west")) { 
+			//Going West
+			xChange = -1;
+		} else if (face.toString().equalsIgnoreCase("south")) { 
+			//Going South
+			zChange = 1;
 		} else {
-			// z must be main direction.
-			zChange = (int) Math.signum(velocity.getZ());
+			//where you going? I don't know, but i caught your NPE bitch.
 		}
-
-		Block toBlock = fromBlock.getRelative(xChange, yChange, zChange);
+			
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+				/* Vector velocity = dispenseEvent.getVelocity();
+				int xChange = 0;
+				int zChange = 0;
+				int yChange = 0;
+				velocity.normalize();
+				float xAbs = (float) Math.abs(velocity.getX());
+				float yAbs = (float) Math.abs(velocity.getY());
+				float zAbs = (float) Math.abs(velocity.getZ());
+				//GriefPrevention.instance.getServer().broadcastMessage("ZVelocity Math: " + Math.abs(velocity.getZ()));
+				//GriefPrevention.instance.getServer().broadcastMessage("XVelocity Math: " + Math.abs(velocity.getX()));
+				//GriefPrevention.instance.getServer().broadcastMessage("ZVelocity: " + velocity.getZ());
+				//GriefPrevention.instance.getServer().broadcastMessage("XVelocity: " + velocity.getX());
+				//GriefPrevention.instance.getServer().broadcastMessage("ZChange: " + Math.signum(velocity.getZ()));
+				//GriefPrevention.instance.getServer().broadcastMessage("XChange: " + Math.signum(velocity.getX()));
+									
+				if (xAbs > yAbs && xAbs > zAbs) {
+					// x is main direction.
+					GriefPrevention.instance.getServer().broadcastMessage("USING X");
+					xChange = (int) Math.signum(velocity.getX());
+				} else if (zAbs > xAbs && zAbs > yAbs) {
+					// z is main direction.
+					GriefPrevention.instance.getServer().broadcastMessage("USING Z");
+					yChange = (int) Math.signum(velocity.getZ());
+				} else {
+					// y must be main direction.
+					GriefPrevention.instance.getServer().broadcastMessage("USING Y");
+					zChange = (int) Math.signum(velocity.getY());
+				}
+*/
+				Block toBlock = fromBlock.getRelative(xChange, yChange, zChange);
 		// both must be either on a claim (the same one) or not in a claim.
 		Claim fromClaim = GriefPrevention.instance.dataStore.getClaimAt(fromBlock.getLocation(), false);
 		Claim toClaim = GriefPrevention.instance.dataStore.getClaimAt(toBlock.getLocation(), false);
 		// if the target is a claim but the source is not, cancel.
-		if (toClaim != null && (fromClaim == null || !fromClaim.equals(toClaim))) {
+		
+		
+		if (toClaim != null && fromClaim == null) {
 			// cancel.
-			dispenseEvent.setCancelled(true);
-			return;
+			//GriefPrevention.instance.getServer().broadcastMessage("Cancelled - outofClaim to InClaim");
+		dispenseEvent.setCancelled(true);
+		return;
 		}
+		
+		if (toClaim == null && fromClaim != null) {
+		// cancel if claim to out of claim
+		//GriefPrevention.instance.getServer().broadcastMessage("Cancelled - InClaim to outofClaim");
+		dispenseEvent.setCancelled(true);
+		return;
+		}
+		
+		if (toClaim == null && fromClaim == null) {
+		// don't allow outside of claims
+		//GriefPrevention.instance.getServer().broadcastMessage("Cancelled - Out of claim to out of claim");
+		dispenseEvent.setCancelled(true);
+		return;
+		}
+		
+		
+		if (!fromClaim.claimOwnerName.equals(toClaim.claimOwnerName)) {
+		// cancel if claim to claim isn't same owner name
+		//GriefPrevention.instance.getServer().broadcastMessage("Cancelled - diff claim owner");
+		dispenseEvent.setCancelled(true);
+		return;
+		}
+		
+
+		
+
+
 
 		// Claim fromClaim = this.getDataStore().getClaimAt(fromBlock.getLocation(),
 		// false, null);
@@ -1007,6 +1085,7 @@ public class BlockEventHandler implements Listener {
 			dispenseEvent.setCancelled(true);
 		} else if (chosenRules.Allowed(toBlock.getLocation(), null).Denied()) {
 			dispenseEvent.setCancelled(true);
+		}
 		}
 
 	}
