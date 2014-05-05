@@ -3,6 +3,7 @@ package me.ryanhamshire.GriefPrevention;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -44,6 +45,7 @@ public class ClaimArray implements Iterable<Claim> {
 	}
 
 	ConcurrentMap<String, ArrayList<Claim>> chunkmap = new ConcurrentHashMap<String, ArrayList<Claim>>();
+    ConcurrentHashMap<UUID,Claim> IDMap = new ConcurrentHashMap<UUID, Claim>();
 	ConcurrentMap<Long, Claim> claimmap = new ConcurrentHashMap<Long, Claim>();
 	private ArrayList<Claim> claims = new ArrayList<Claim>();
 
@@ -51,7 +53,9 @@ public class ClaimArray implements Iterable<Claim> {
 
 	public void add(Claim newClaim) {
 		addClaimWorld(newClaim);
+
 		claims.add(newClaim);
+        IDMap.put(newClaim.getUUID(),newClaim);
 		claimmap.put(newClaim.getID(), newClaim);
 		ArrayList<String> chunks = getChunks(newClaim);
 		for (String chunk : chunks) {
@@ -82,6 +86,15 @@ public class ClaimArray implements Iterable<Claim> {
 
 	}
 
+    /**
+     * retrieves a claim from this claimarray based on it's UUID.
+     * @param claimUUID UUID of Claim to retrieve.
+     * @return Claim with a matching UUID, or null of no claim is present with the given UUID.
+     */
+    public Claim get(UUID claimUUID){
+        if(!IDMap.containsKey(claimUUID)) return null;
+        return IDMap.get(claimUUID);
+    }
 	public Claim get(int i) {
 		return claims.get(i);
 	}

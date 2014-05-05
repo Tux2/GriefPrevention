@@ -1,5 +1,8 @@
 package me.ryanhamshire.GriefPrevention;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 public class Debugger {
 
     public static void setDebugLevel(DebugLevel debugLevel) {
@@ -26,7 +29,12 @@ public class Debugger {
 	public static DebugLevel getCurrentDebugLevel() {
 		return GriefPrevention.instance.debug.getCurrentLevel();
 	}
-
+    public static void Write(Exception stacktrace,DebugLevel Level){
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        stacktrace.printStackTrace(pw);
+        Write(sw.toString(),Level);
+    }
 	public static void Write(String Message, DebugLevel Level) {
 		// System.out.println(Message);
 		 if(GriefPrevention.instance!=null &&

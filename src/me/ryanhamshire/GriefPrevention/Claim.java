@@ -18,13 +18,7 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import me.ryanhamshire.GriefPrevention.Configuration.SiegeableData;
 import me.ryanhamshire.GriefPrevention.Configuration.WorldConfig;
@@ -97,11 +91,12 @@ public class Claim {
 	 * Upper X/Z Corner of this Claim.
 	 */
 	Location greaterBoundaryCorner;
-
+    UUID ClaimUUID;
 	/**
 	 * id number. unique to this claim, never changes.
 	 * 
 	 */
+    @Deprecated
 	Long id = null;
 
 	/**
@@ -879,8 +874,26 @@ public class Claim {
 	public int getHeight() {
 		return this.greaterBoundaryCorner.getBlockZ() - this.lesserBoundaryCorner.getBlockZ() + 1;
 	}
+    void setUUID(UUID uid){
+        ClaimUUID = uid;
+    }
 
-	// accessor for ID
+    public UUID getUUID(){
+        if(this.ClaimUUID==null){
+            //not initialized, so- initialize it.
+            Debugger.Write("Claim has no UUID; generating. id=" + ((id!=null)?id.toString():"none"), Debugger.DebugLevel.Verbose);
+            ClaimUUID = UUID.randomUUID();
+        }
+        return this.ClaimUUID;
+    }
+    /**
+     * Returns the unique ID for this Claim.
+     * @return Unique ID of this claim.
+     * @deprecated use getUUID() and use UUIDs for Claim identification instead.
+     */
+
+    @Deprecated
+
 	public Long getID() {
 		return this.id;
 	}

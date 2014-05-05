@@ -54,6 +54,7 @@ public class ClaimInfoCommand extends GriefPreventionCommand {
 			String SizeString = "(" + String.valueOf(claimatpos.getWidth()) + "," + String.valueOf(claimatpos.getHeight()) + ")";
 			String ClaimOwner = claimatpos.getOwnerName();
 			GriefPrevention.sendMessage(player, TextMode.Info, "ID:" + claimatpos.getID());
+            GriefPrevention.sendMessage(player, TextMode.Info, "UUID:" + claimatpos.getUUID().toString());
 			GriefPrevention.sendMessage(player, TextMode.Info, "Position:" + lowerboundary + "-" + upperboundary);
 			GriefPrevention.sendMessage(player, TextMode.Info, "Size:" + SizeString);
 			GriefPrevention.sendMessage(player, TextMode.Info, "Owner:" + ClaimOwner);

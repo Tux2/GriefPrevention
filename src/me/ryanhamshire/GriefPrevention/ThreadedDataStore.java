@@ -4,6 +4,7 @@ import org.bukkit.World;
 
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  * are run on a separate thread.
  */
 public class ThreadedDataStore extends DataStore{
-
+    public String ConfigDescriptor = "threaded";
     private DataStore InternalStore = null;
     public DataStore getInternalStore(){ return InternalStore;}
     private Queue<Runnable> DataCallQueue= new ConcurrentLinkedDeque<Runnable>();
@@ -35,6 +36,7 @@ public class ThreadedDataStore extends DataStore{
 
 
     }
+
 
     public ThreadedDataStore(DataStore Internal){
         if(Internal==null) throw new IllegalArgumentException("DataStore cannot be null");
@@ -73,6 +75,11 @@ public class ThreadedDataStore extends DataStore{
     @Override
     public boolean hasPlayerData(String playerName) {
         return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ConcurrentHashMap<String, Integer> getAllGroupBonusBlocks() {
+        return null;
     }
 
     @Override

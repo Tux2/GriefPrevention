@@ -23,17 +23,12 @@ public class CleanClaimsCommand extends GriefPreventionCommand {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         for(World w: Bukkit.getWorlds()){
-                   int CleanedinWorld = 0;
-                   WorldClaimCleanupTask wcc = new WorldClaimCleanupTask(w.getName());
-                    List<Claim> WorldClaims = GriefPrevention.instance.dataStore.getClaimArray().getWorldClaims(w);
-                    for(int i=0;i<WorldClaims.size();i++){
-                        wcc.run();
-                        CleanedinWorld = wcc.lastcleaned;
-                        Player p = sender instanceof Player?(Player)sender:null;
-
-                        GriefPrevention.sendMessage(p,TextMode.Info,"Cleaned up " + String.valueOf(CleanedinWorld) + " Claims in " + w.getName());
-                    }
-
+            int CleanedinWorld = 0;
+            WorldClaimCleanupTask wcc = new WorldClaimCleanupTask(w.getName());
+            wcc.run();
+            CleanedinWorld = wcc.lastcleaned;
+            Player p = sender instanceof Player?(Player)sender:null;
+            GriefPrevention.sendMessage(p,TextMode.Info,"Cleaned up " + String.valueOf(CleanedinWorld) + " Claims in " + w.getName());
         }
         return true;
     }

@@ -44,7 +44,6 @@ public abstract class DataStore {
 
 	public final static String dataLayerFolderPath = "plugins" + File.separator + "GriefPrevention";
 	public final static String configFilePath = dataLayerFolderPath + File.separator + "config.yml";
-	
 
 	// path information, for where stuff stored on disk is well... stored
 	/**
@@ -81,7 +80,6 @@ public abstract class DataStore {
 	// timestamp for each siege cooldown to end
 	private HashMap<String, Long> siegeCooldownRemaining = new HashMap<String, Long>();
 
-
 	/**
 	 * Adds a claim to the datastore, making it an effective claim.
 	 * 
@@ -109,7 +107,7 @@ public abstract class DataStore {
 
 
 		// add it and mark it as added
-		int j = 0;
+		//int j = 0;
 		this.claims.add(newClaim);
 
 		newClaim.inDataStore = true;
@@ -252,7 +250,7 @@ public abstract class DataStore {
         if(parent!=null){
             Debugger.Write("Creating Subclaim of Claim with ID:" + parent.getID(),DebugLevel.Verbose);
         }
-		Player gotplayer = Bukkit.getPlayer(ownerName);
+		//Player gotplayer = Bukkit.getPlayer(ownerName);
 		// determine small versus big inputs
 		if (x1 < x2) {
 			smallx = x1;
@@ -308,8 +306,7 @@ public abstract class DataStore {
 			}
 		}
 
-		for (int i = 0; i < claimsToCheck.size(); i++) {
-			Claim otherClaim = claimsToCheck.get(i);
+		for (Claim otherClaim : claimsToCheck) {
 
 			// if we find an existing claim which will be overlapped
 			if (otherClaim.overlaps(newClaim)) {
@@ -336,16 +333,16 @@ public abstract class DataStore {
                 }
 
 			}
-		} else {
-			/*
+		} /* else {
+			*
 			 * ClaimResizeEvent claimevent = new ClaimResizeEvent(oldclaim,
 			 * newClaim
 			 * .lesserBoundaryCorner,newClaim.greaterBoundaryCorner,gotplayer);
 			 * Bukkit.getServer().getPluginManager().callEvent(claimevent);
 			 * if(claimevent.isCancelled()) { result.succeeded =
 			 * CreateClaimResult.Result.Canceled; return result; }
-			 */
-		}
+			 *
+		}*/
 		// otherwise add this new claim to the data store to make it effective
 		this.addClaim(newClaim);
 
@@ -482,8 +479,7 @@ public abstract class DataStore {
 		}
 
 		// delete them one by one
-		for (int i = 0; i < claimsToDelete.size(); i++) {
-			Claim claim = claimsToDelete.get(i);
+		for (Claim claim : claimsToDelete) {
 			claim.removeSurfaceFluids(null);
 
 			this.deleteClaim(claim);
@@ -556,7 +552,7 @@ public abstract class DataStore {
         for(Player p:Bukkit.getOnlinePlayers()){
 
             Claim playerclaim = GriefPrevention.instance.dataStore.getClaimAt(p.getLocation(),false);
-            boolean dobreak=false;
+            //boolean dobreak=false;
             for(Claim c:siegeData.claims){
                 if(c==playerclaim){
                     PlayersinClaim.add(p);
@@ -668,9 +664,9 @@ public abstract class DataStore {
 					HashMap<Integer, ItemStack> wontFitItems = winner.getInventory().addItem(iterateitem);
 
 					// drop any remainder on the ground at his feet
-					Object[] keys = wontFitItems.keySet().toArray();
+					Set<Integer> keys = wontFitItems.keySet();
 					Location winnerLocation = winner.getLocation();
-					for (Object key : keys) {
+					for (Integer key : keys) {
 						winnerLocation.getWorld().dropItemNaturally(winnerLocation, wontFitItems.get(key));
 					}
 				}
@@ -746,6 +742,14 @@ public abstract class DataStore {
 		return loc.getWorld().getName() + ";" + chunkX + "," + chunkZ;
 	}
 
+    /**
+     * retrieves a claim via it's UUID.
+     * @param id UUID to retrieve.
+     * @return Claim with the given UUID, or null if there aren't any with that UUID.
+     */
+    synchronized public Claim getClaim(UUID id){
+        return claims.get(id);
+    }
 	/**
 	 * Gets a claim by it's ID.
 	 * 
@@ -804,8 +808,7 @@ public abstract class DataStore {
 
 		// otherwise, search all existing claims in the chunk until we find the
 		// right claim
-		for (int i = 0; i < aclaims.size(); i++) {
-			Claim claim = aclaims.get(i);
+		for (Claim claim : aclaims) {
 			if (claim.parent != null)
 				continue;
 			//
@@ -1039,6 +1042,8 @@ public abstract class DataStore {
 	abstract PlayerData getPlayerDataFromStorage(String playerName);
 
 	public abstract boolean hasPlayerData(String playerName);
+
+    public abstract ConcurrentHashMap<String, Integer> getAllGroupBonusBlocks();
 
 	// increments the claim ID and updates secondary storage to be sure it's
 	// saved
@@ -1360,15 +1365,13 @@ public abstract class DataStore {
 	}
 
 	String locationToString(Location location) {
-		StringBuilder stringBuilder = new StringBuilder(location.getWorld().getName());
-		stringBuilder.append(locationStringDelimiter);
-		stringBuilder.append(location.getBlockX());
-		stringBuilder.append(locationStringDelimiter);
-		stringBuilder.append(location.getBlockY());
-		stringBuilder.append(locationStringDelimiter);
-		stringBuilder.append(location.getBlockZ());
-
-		return stringBuilder.toString();
+		return location.getWorld().getName()
+                + locationStringDelimiter
+		        + location.getBlockX()
+		        + locationStringDelimiter
+		        + location.getBlockY()
+		        + locationStringDelimiter
+                + location.getBlockZ();
 	}
 
 	/**
@@ -1466,23 +1469,23 @@ public abstract class DataStore {
 		// if succeeded
 		if (result.succeeded == CreateClaimResult.Result.Success) {
 			// copy permissions from old claim
-			ArrayList<String> builders = new ArrayList<String>();
-			ArrayList<String> containers = new ArrayList<String>();
-			ArrayList<String> accessors = new ArrayList<String>();
-			ArrayList<String> managers = new ArrayList<String>();
+			List<String> builders = new ArrayList<String>();
+			List<String> containers = new ArrayList<String>();
+			List<String> accessors = new ArrayList<String>();
+			List<String> managers = new ArrayList<String>();
 			claim.getPermissions(builders, containers, accessors, managers);
 
-			for (int i = 0; i < builders.size(); i++)
-				result.claim.setPermission(builders.get(i), ClaimPermission.Build);
+			for (String b : builders)
+				result.claim.setPermission(b, ClaimPermission.Build);
 
-			for (int i = 0; i < containers.size(); i++)
-				result.claim.setPermission(containers.get(i), ClaimPermission.Inventory);
+			for (String c : containers)
+				result.claim.setPermission(c, ClaimPermission.Inventory);
 
-			for (int i = 0; i < accessors.size(); i++)
-				result.claim.setPermission(accessors.get(i), ClaimPermission.Access);
+			for (String a : accessors)
+				result.claim.setPermission(a, ClaimPermission.Access);
 
-			for (int i = 0; i < managers.size(); i++) {
-				result.claim.addManager(managers.get(i));
+			for (String m : managers) {
+				result.claim.addManager(m);
 				// result.claim.managers.add(managers.get(i));
 			}
 
@@ -1514,7 +1517,7 @@ public abstract class DataStore {
 		int y2 = Math.max(p1.getBlockY(), p2.getBlockY());
 		int z2 = Math.max(p1.getBlockZ(), p2.getBlockZ());
 
-		return resizeClaim(claim, x1, x1, y1, y2, z1, z2, resizer);
+		return resizeClaim(claim, x1, x2, y1, y2, z1, z2, resizer);
 
 	}
 
@@ -1655,35 +1658,71 @@ public abstract class DataStore {
 
 	abstract void writeClaimToStorage(Claim claim);
 
+    public final DataStore importDataStore(DataStore Source) throws IllegalArgumentException {
+        Debugger.Write("Importing DataStore from " + Source.getClass().getName() + " to " + this.getClass().getName() + ".", DebugLevel.Informational);
+        if(Source.getClass().equals(getClass())) {
+            throw new IllegalArgumentException("The source DataStore may not be of the same type.");
+        }
+
+        if(this.getNextClaimID() < Source.getNextClaimID()) {
+            Debugger.Write("Importing Next Claim ID.", DebugLevel.Informational);
+            this.setNextClaimID(Source.getNextClaimID());
+        }
+
+        //transfer claims from Source to target.
+        //conflicts will be ignored
+        ForceLoadAllClaims(Source);
+        for(Claim cc : Source.getClaimArray()){
+            Debugger.Write("Importing claim " + cc.getID() + ".", DebugLevel.Informational);
+            this.addClaim(cc);
+        }
+
+        // Migrate the player data
+        for(PlayerData p : Source.getAllPlayerData()){
+            //save this PlayerData into the target.
+            Debugger.Write("Importing Player " + p.playerName + ".", DebugLevel.Informational);
+            this.savePlayerData(p.playerName, p);
+        }
+
+        Map<String, Integer> bonuses = Source.getAllGroupBonusBlocks();
+        for(String s : bonuses.keySet()) {
+            Debugger.Write("Importing bonus group " + s + ".", DebugLevel.Informational);
+            this.saveGroupBonusBlocks(s, bonuses.get(s));
+        }
+        Debugger.Write("Importing Complete", DebugLevel.Informational);
+        return this;
+    }
+
 	public static void migrateData(DataStore Source,DataStore Target){
 		migrateData(new DataStore[]{Source},new DataStore[]{Target});
 	}
-	
-	public static void migrateData(DataStore[] Sources,DataStore[] Targets){
-		
-		//migrate from the given Source to the given Target.
-		//first try to force all claims to be loaded in the Source DataStore.
-		for(DataStore Source:Sources){
-			
-				
-			ForceLoadAllClaims(Source);
-			
-			for(DataStore Target:Targets){
-				//transfer claims from Source to target.
-				for(Claim cc:Source.claims){
-					Target.addClaim(cc);
-				}
-				
-				for(PlayerData p:Source.getAllPlayerData()){
-					//save this PlayerData into the target.
-					
-				    Target.savePlayerData(p.playerName, p);
-				    
-				}
-			}
-		}
-		
-		
-	}
-	
+
+
+    public static void migrateData(DataStore[] Sources,DataStore[] Targets){
+
+        //migrate from the given Source to the given Target.
+        //first try to force all claims to be loaded in the Source DataStore.
+        for(DataStore Source:Sources){
+
+
+            ForceLoadAllClaims(Source);
+
+            for(DataStore Target:Targets){
+                //transfer claims from Source to target.
+                for(Claim cc:Source.claims){
+                    Target.addClaim(cc);
+                }
+
+                for(PlayerData p:Source.getAllPlayerData()){
+                    //save this PlayerData into the target.
+
+                    Target.savePlayerData(p.playerName, p);
+
+                }
+            }
+        }
+
+
+    }
+
 }

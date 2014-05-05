@@ -1,23 +1,21 @@
 package me.ryanhamshire.GriefPrevention;
 
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.Debugger;
-import me.ryanhamshire.GriefPrevention.GriefPrevention;
-import me.ryanhamshire.GriefPrevention.PlayerData;
-import me.ryanhamshire.GriefPrevention.DataStore;
+import java.io.File;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class YamlDataStore extends DataStore {
     public static String ConfigDescriptor = "yaml";
@@ -46,10 +44,12 @@ public class YamlDataStore extends DataStore {
     private final static String PARENT_PATH = "Parent";
     private final static String NEVERDELETE_PATH = "NeverDelete";
     private final static String MODIFIED_PATH = "LastModified";
+    private final static String LEGACY_ID_PATH = "LegacyId";
 
     // Server constants
     private final static String NEXTCLAIMID_PATH = "NextClaimId";
     private final static String GROUPBONUS_PATH = "GroupBonusBlocks";
+    private final static String AUTOSAVE_PATH = "AutoSaveInterval";
 
     private YamlConfiguration claimConfig;
     private YamlConfiguration playerConfig;
@@ -67,11 +67,32 @@ public class YamlDataStore extends DataStore {
         this.initialize(Source, Target);
     }
 
+    private class AutoSave extends BukkitRunnable {
+        @Override
+        public void run() {
+            Debugger.Write("Running AutoSave.", Debugger.DebugLevel.Informational);
+            saveAll();
+            Debugger.Write("AutoSave Complete.", Debugger.DebugLevel.Informational);
+        }
+    }
+
     private static FileConfiguration getSourceCfg() {
-        File f = new File(DataStore.dataLayerFolderPath + "yaml.yml");
-        if (f.exists())
-            return YamlConfiguration.loadConfiguration(f);
-        return new YamlConfiguration();
+        File f = new File(DataStore.dataLayerFolderPath + File.separator + "yamlconfig.yml");
+        YamlConfiguration config;
+        if (f.exists()) {
+            config =  YamlConfiguration.loadConfiguration(f);
+        } else {
+            config = new YamlConfiguration();
+        }
+        if(!config.isSet(AUTOSAVE_PATH)) {
+            config.set(AUTOSAVE_PATH, 60);
+            try {
+                config.save(f);
+            } catch (IOException ex) {
+                Debugger.Write("Failed to create DataStore configuration file.", Debugger.DebugLevel.Errors);
+            }
+        }
+        return config;
     }
 
     private static FileConfiguration getTargetCfg() {
@@ -160,16 +181,18 @@ public class YamlDataStore extends DataStore {
         super.initialize(Source, Target);
         reloadAll();
         // load group data into memory
-        if (serverConfig.isConfigurationSection(GROUPBONUS_PATH)) {
-            ConfigurationSection groupReader = serverConfig.getConfigurationSection(GROUPBONUS_PATH);
-
-            for(String s : groupReader.getKeys(false)) {
-                this.permissionToBonusBlocksMap.put(s.replace("-", "."), groupReader.getInt(s));
-            }
-        }
+        this.permissionToBonusBlocksMap = getAllGroupBonusBlocks();
 
         // load next claim number into memory
         this.nextClaimID = serverConfig.getLong(NEXTCLAIMID_PATH);
+
+        // Start the auto save feature
+        // use 0 to disable it and only save on close
+        int timer = getSourceCfg().getInt(AUTOSAVE_PATH);
+        if(timer > 0) {
+            Plugin plugin = Bukkit.getPluginManager().getPlugin("GriefPrevention");
+            new AutoSave().runTaskTimer(plugin, timer * 1200, timer * 1200);
+        }
     }
 
     @Override
@@ -284,7 +307,7 @@ public class YamlDataStore extends DataStore {
         for(String s : claimConfig.getKeys(false)) {
             ConfigurationSection claimReader = claimConfig.getConfigurationSection(s);
             if(claimReader.getString(GREATERBOUNDARY_PATH).split(";")[0].equals(worldLoad.getName()) && !claimReader.isString(PARENT_PATH)) {
-               Claim readClaim = getClaimFromStorage(Long.valueOf(s));
+               Claim readClaim = getClaimFromStorage(UUID.fromString(s));
                if(readClaim != null) {
                    readClaim.inDataStore = true;
                    addClaim(readClaim);
@@ -293,12 +316,12 @@ public class YamlDataStore extends DataStore {
         }
     }
 
-    Claim getClaimFromStorage(Long id) {
-        if(!claimConfig.isConfigurationSection(String.valueOf(id))) {
+    Claim getClaimFromStorage(UUID uniqueId) {
+        if(!claimConfig.isConfigurationSection(String.valueOf(uniqueId))) {
             return null;
         }
 
-        ConfigurationSection claimReader = claimConfig.getConfigurationSection(String.valueOf(id));
+        ConfigurationSection claimReader = claimConfig.getConfigurationSection(String.valueOf(uniqueId));
         Claim topLevelClaim;
         try {
             Location lesserBoundaryCorner = this.locationFromString(claimReader.getString(LESSERBOUNDARY_PATH));
@@ -310,6 +333,7 @@ public class YamlDataStore extends DataStore {
             List<String> containers = (claimReader.getStringList(CONTAINER_PATH));
             List<String> accessors = (claimReader.getStringList(ACCESSOR_PATH));
             List<String> managers = (claimReader.getStringList(MANAGER_PATH));
+            Long id = (claimReader.getLong(LEGACY_ID_PATH));
 
             topLevelClaim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerName,
                     builders.toArray(new String[builders.size()]), containers.toArray(new String[containers.size()]),
@@ -317,10 +341,11 @@ public class YamlDataStore extends DataStore {
                     id, neverDelete);
 
             topLevelClaim.modifiedDate = new Date(claimReader.getLong(MODIFIED_PATH));
+            topLevelClaim.setUUID(uniqueId);
 
             if(claimReader.isList(CHILDREN_PATH)) {
-                for (long subclaimId : claimReader.getLongList(CHILDREN_PATH)) {
-                    Claim child = getClaimFromStorage(subclaimId); // Yay recursion!
+                for (String subclaimId : claimReader.getStringList(CHILDREN_PATH)) {
+                    Claim child = getClaimFromStorage(UUID.fromString(subclaimId)); // Yay recursion!
                     if(child != null) {
                         child.parent = topLevelClaim;
                         topLevelClaim.children.add(child);
@@ -331,7 +356,7 @@ public class YamlDataStore extends DataStore {
 
 
         } catch (Exception ex) {
-            GriefPrevention.AddLogEntry("Unable to load data for claim \"" + id + "\": " + ex.getClass().getName() + "-" + ex.getMessage());
+            GriefPrevention.AddLogEntry("Unable to load data for claim \"" + uniqueId + "\": " + ex.getClass().getName() + "-" + ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -340,23 +365,24 @@ public class YamlDataStore extends DataStore {
 
     @Override
     void writeClaimToStorage(Claim claim) {
-        if(claim.id < 0) claim.id = getNextClaimID();
-        String claimID = String.valueOf(claim.id);
 
         ConfigurationSection claimWriter;
-        if(claimConfig.isConfigurationSection(claimID)) {
-            claimWriter = claimConfig.getConfigurationSection(claimID);
+        if(claimConfig.isConfigurationSection(claim.getUUID().toString())) {
+            claimWriter = claimConfig.getConfigurationSection(claim.getUUID().toString());
         } else {
-            claimWriter = claimConfig.createSection(claimID);
+            claimWriter = claimConfig.createSection(claim.getUUID().toString());
         }
 
+        if(claim.id < 0) claim.id = getNextClaimID();
+
         // Write claim information
+        claimWriter.set(LEGACY_ID_PATH, claim.id);
         claimWriter.set(LESSERBOUNDARY_PATH, this.locationToString(claim.getLesserBoundaryCorner()));
         claimWriter.set(GREATERBOUNDARY_PATH, this.locationToString(claim.getGreaterBoundaryCorner()));
         claimWriter.set(OWNER_PATH, claim.getOwnerName());
         claimWriter.set(NEVERDELETE_PATH, claim.neverdelete);
         if(claim.parent != null) {
-            claimWriter.set(PARENT_PATH, claim.parent.getID());
+            claimWriter.set(PARENT_PATH, claim.parent.getUUID().toString());
         }
 
         // Write the trusted players
@@ -381,9 +407,9 @@ public class YamlDataStore extends DataStore {
         // It's ok to do this for any claim type,
         // If it's a subdivision, it will be an empty list
         // Recursion for the win!
-        List<Long> children = new ArrayList<Long>();
+        List<String> children = new ArrayList<String>();
         for(Claim child : claim.children) {
-            children.add(child.getID());
+            children.add(child.getUUID().toString());
             writeClaimToStorage(child);
         }
         if(!children.isEmpty()) {
@@ -394,7 +420,7 @@ public class YamlDataStore extends DataStore {
     // Deletes a claim from the datastore
     @Override
     void deleteClaimFromSecondaryStorage(Claim claim) {
-        claimConfig.set(claim.getID().toString(), null);
+        claimConfig.set(claim.getUUID().toString(), null);
     }
 
     @Override
@@ -413,6 +439,21 @@ public class YamlDataStore extends DataStore {
     }
 
     @Override
+    public ConcurrentHashMap<String, Integer> getAllGroupBonusBlocks() {
+        ConcurrentHashMap<String, Integer> bonuses = new ConcurrentHashMap<String,Integer>();
+
+        if (!serverConfig.isConfigurationSection(GROUPBONUS_PATH)) {
+            return bonuses;
+        }
+
+        ConfigurationSection groupReader =  serverConfig.getConfigurationSection(GROUPBONUS_PATH);
+        for(String g : groupReader.getKeys(false)) {
+            bonuses.put(g.replace("-", "."), groupReader.getInt(g));
+        }
+        return bonuses;
+    }
+
+    @Override
     void saveGroupBonusBlocks(String groupName, int amount) {
         ConfigurationSection groupWriter;
         if (serverConfig.isConfigurationSection(GROUPBONUS_PATH)) {
@@ -423,29 +464,5 @@ public class YamlDataStore extends DataStore {
 
         // Periods are key delimiters in YAML, need to use something else
         groupWriter.set(groupName.replace('.', '-'), amount);
-    }
-
-    @Override
-    public int getGroupBonusBlocks(String playerName) {
-        int totalBonusBlocks = 0;
-        if (!serverConfig.isConfigurationSection(GROUPBONUS_PATH)) {
-            return totalBonusBlocks;
-        }
-
-
-        ConfigurationSection groupReader = serverConfig.getConfigurationSection(GROUPBONUS_PATH);
-        Player player = GriefPrevention.instance.getServer().getPlayer(playerName);
-        if (player == null) {
-            return totalBonusBlocks;
-        }
-
-        for(String s : groupReader.getKeys(false)) {
-            // Periods are key delimiters in YAML, need to use something else
-            if(player.hasPermission(s.replace('-', '.'))) {
-                totalBonusBlocks += serverConfig.getInt(s);
-            }
-        }
-
-        return totalBonusBlocks;
     }
 }
