@@ -30,9 +30,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import me.ryanhamshire.GriefPrevention.Configuration.*;
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.CommandHandling.CommandHandler;
+import me.ryanhamshire.GriefPrevention.Configuration.ClaimBehaviourData;
+import me.ryanhamshire.GriefPrevention.Configuration.ClaimMetaHandler;
+import me.ryanhamshire.GriefPrevention.Configuration.ConfigData;
+import me.ryanhamshire.GriefPrevention.Configuration.ModBlockHelper;
+import me.ryanhamshire.GriefPrevention.Configuration.ModdedBlocksSearchResults;
+import me.ryanhamshire.GriefPrevention.Configuration.WorldConfig;
 import me.ryanhamshire.GriefPrevention.events.GPLoadEvent;
 import me.ryanhamshire.GriefPrevention.events.GPUnloadEvent;
 import me.ryanhamshire.GriefPrevention.tasks.DeliverClaimBlocksTask;
@@ -1228,7 +1233,8 @@ public class GriefPrevention extends JavaPlugin {
 			return player;
 
 		// then search offline players
-		OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
+		OfflinePlayer[] offlinePlayers = Bukkit.getServer().getOfflinePlayers();
+		//OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
 		for (int i = 0; i < offlinePlayers.length; i++) {
 			if (offlinePlayers[i].getName().equalsIgnoreCase(name)) {
 				return offlinePlayers[i];
