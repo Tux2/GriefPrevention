@@ -43,6 +43,7 @@ import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.entity.minecart.PoweredMinecart;
@@ -804,6 +805,12 @@ class PlayerEventHandler implements Listener
 				//if the entity is an animal, apply container rules
 				else if(entity instanceof Animals)
 				{
+					// if entity is a tameable animal, allow owner to hit/sit/mount
+					if (entity instanceof Tameable) {
+						if (((Tameable)entity).getOwner() == player) {
+							return;
+						}
+					}
 					if(claim.allowContainers(player) != null)
 					{
 						GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoDamageClaimedEntity);
