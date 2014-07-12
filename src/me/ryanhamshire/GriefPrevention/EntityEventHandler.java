@@ -36,7 +36,6 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.Villager;
-
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -287,8 +286,17 @@ class EntityEventHandler implements Listener
         	return;
         }
 		
-		//if the player doesn't have build permission, don't allow the breakage
 		Player playerRemover = (Player)entityEvent.getRemover();
+
+		//if it is a leash and the player has inventory permission, allow the breakage
+		if (event.getEntity().getType() == EntityType.LEASH_HITCH) {
+			Claim claim = this.dataStore.getClaimAt(event.getEntity().getLocation(), false, null);
+			if(claim == null || claim.allowContainers(playerRemover) == null) {
+				return;
+			}
+		}
+		
+		//if the player doesn't have build permission, don't allow the breakage
         String noBuildReason = GriefPrevention.instance.allowBuild(playerRemover, event.getEntity().getLocation());
         if(noBuildReason != null)
         {
@@ -302,7 +310,22 @@ class EntityEventHandler implements Listener
 	public void onPaintingPlace(HangingPlaceEvent event)
 	{
 		//FEATURE: similar to above, placing a painting requires build permission in the claim
-	
+		//FEATURE: attaching a lead to a fence post requires container permission
+
+		Block block = event.getBlock();
+		Player player = event.getPlayer();
+		
+		// if the player doesn't have permission, don't allow leash placement
+		if(event.getEntity().getType() == EntityType.LEASH_HITCH) {
+			Claim claim = this.dataStore.getClaimAt(block.getLocation(), false, null);
+			if(claim != null && claim.allowContainers(player) != null) {
+				//TODO Change below error message to configurable message
+				GriefPrevention.sendMessage(player, TextMode.Err, "You do not have permission to attach a leash in this claim.");
+				event.setCancelled(true);
+			}
+			return;
+		}
+
 		//if the player doesn't have permission, don't allow the placement
 		String noBuildReason = GriefPrevention.instance.allowBuild(event.getPlayer(), event.getEntity().getLocation());
         if(noBuildReason != null)
