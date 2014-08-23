@@ -785,7 +785,8 @@ class PlayerEventHandler implements Listener {
 	private void onPlayerDisconnect(final Player player, String notificationMessage) {
 		String playerName = player.getName();
         PvPSafePlayerTask.ClearPlayerTasks(player);
-		final PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(playerName);
+        PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(playerName);
+        final PlayerData playerData2 = GriefPrevention.instance.dataStore.getPlayerData(playerName);
         final PlayerData lastPvPData = playerData.lastPvpPlayer==null?null:GriefPrevention.instance.dataStore.getPlayerData(playerData.lastPvpPlayer);
         if(playerData.lastPvpPlayer!=null){
 
@@ -800,57 +801,38 @@ class PlayerEventHandler implements Listener {
 		}
 
 
-        //tweak: delay for 10 seconds before we perform this check...
 		if (wc.getPvPPunishLogout() && playerData.inPvpCombat()) {
+            //clear players inventory on login
+			playerData.ClearInventoryOnJoin=true;
             final PlayerInventory dcedInventory = player.getInventory();
-            Debugger.Write("Disconnected player:" + player.getName() + " was in PVP Combat.",DebugLevel.Verbose);
-            Bukkit.getScheduler().runTaskLater(GriefPrevention.instance, new Runnable() {
-                  public void run(){
-                      Debugger.Write("Punishment Task, player:" + player.getName(),DebugLevel.Verbose);
+            Bukkit.getScheduler().runTask(GriefPrevention.instance, new Runnable() {
+                public void run(){   
+                	
+                    Player lastplayer = lastPvPData==null?null:Bukkit.getPlayerExact(lastPvPData.playerName);
+                    OfflinePlayer thisPlayer = Bukkit.getOfflinePlayer(playerData2.playerName);
+               // If other player is still online....
+                    if(lastplayer!=null && lastplayer.isOnline() && (thisPlayer==null || !thisPlayer.isOnline())){
+                    	GriefPrevention.sendMessage(lastplayer,TextMode.Info,Messages.PvPLogAnnouncement,player.getName());
 
-
-
-                      //if the last player this Player attacked is still online...
-                      Player lastplayer = lastPvPData==null?null:Bukkit.getPlayerExact(lastPvPData.playerName);
-                      OfflinePlayer thisPlayer = Bukkit.getOfflinePlayer(playerData.playerName);
-
-                      Debugger.Write("Logged player:" + player.getName() + " online:" + thisPlayer.isOnline(),DebugLevel.Verbose);
-                      if(lastplayer==null) Debugger.Write("No other player.",DebugLevel.Verbose);
-                      else Debugger.Write("other Player:" + lastplayer.getName(),DebugLevel.Verbose);
-                      Debugger.Write("lastplayer!=null && lastplayer.isOnline:" + (lastplayer!=null && lastplayer.isOnline()),DebugLevel.Verbose);
-                      Debugger.Write("!(thisPlayer==null || thisPlayer.isOnline())" + (!(thisPlayer==null || thisPlayer.isOnline())),DebugLevel.Verbose);
-                      if(lastplayer!=null && lastplayer.isOnline() && (thisPlayer==null || !thisPlayer.isOnline())){
-
-                          //make sure they didn't relog, either.
-                          //I'm fairly certain this won't drop their items, since they DC'd.
-                          //so we need to drop it manually.
-
-
-                          GriefPrevention.sendMessage(lastplayer,TextMode.Info,Messages.PvPLogAnnouncement,player.getName());
-
-                          for(ItemStack is:dcedInventory.getContents()){
-                              if(is!=null && !(is.getType() == Material.AIR)) lastplayer.getWorld().dropItemNaturally(lastplayer.getLocation(),is);
-                          }
-                          for(ItemStack is:dcedInventory.getArmorContents()){
-                              if(is!=null && !(is.getType() == Material.AIR)) lastplayer.getWorld().dropItemNaturally(lastplayer.getLocation(),is);
-                          }
-                          player.getInventory().clear();
-                          player.getInventory().setArmorContents(new ItemStack[]{null,null,null,null});
-                          //kill the disconnected player. They will have disconnected by this point, naturally.
-                          player.setHealth(0);
-
-                          playerData.ClearInventoryOnJoin=true;
-
-
-
-                      }
-                  }
-
-
-            },20*5);
-
-
-		}
+                        for(ItemStack is:dcedInventory.getContents()){
+                            if(is!=null && !(is.getType() == Material.AIR)) lastplayer.getWorld().dropItemNaturally(lastplayer.getLocation(),is);
+                        }
+                        for(ItemStack is:dcedInventory.getArmorContents()){
+                            if(is!=null && !(is.getType() == Material.AIR)) lastplayer.getWorld().dropItemNaturally(lastplayer.getLocation(),is);
+                        }	
+                    }
+                	
+                	
+               //kill player... (they will login dead) 	
+            player.setHealth(0);  
+                }
+            });
+            
+		}	
+		
+	//}		
+		
+       
 
 		// FEATURE: during a siege, any player who logs out dies and forfeits
 		// the siege
@@ -879,7 +861,7 @@ class PlayerEventHandler implements Listener {
                         Debugger.Write("Other Player: " + otherplayer.getName(),DebugLevel.Informational);
 
                         if(otherplayer.isOnline() && !player.isOnline()){
-                            if(!player.isOnline())playerData.ClearInventoryOnJoin=true;
+                            if(!player.isOnline())playerData2.ClearInventoryOnJoin=true;
 
                             //kill the disconnected player. They will have disconnected by this point, naturally.
 
@@ -912,8 +894,9 @@ class PlayerEventHandler implements Listener {
 		}
 
 		// drop data about this player
-		GriefPrevention.instance.dataStore.clearCachedPlayerData(player.getName());
+		//GriefPrevention.instance.dataStore.clearCachedPlayerData(player.getName());
 	}
+	
 
 	// when a player drops an item
 	@EventHandler(priority = EventPriority.NORMAL)
@@ -2677,13 +2660,13 @@ class PlayerEventHandler implements Listener {
 		// remember the player's ip address
 		PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(player.getName());
 		playerData.ipAddress = event.getAddress();
-
+		
+		
         if(playerData.ClearInventoryOnJoin){
 
             //clear their inventory.
             //set the flag to false, we don't want to clear it again!
             playerData.ClearInventoryOnJoin=false;
-
             player.getInventory().clear();
 
             player.getInventory().setArmorContents( new ItemStack[4]);
