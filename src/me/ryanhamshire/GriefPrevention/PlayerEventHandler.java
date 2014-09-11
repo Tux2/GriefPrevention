@@ -2254,7 +2254,7 @@ class PlayerEventHandler implements Listener {
 
             }
             else if(entity instanceof Minecart){
-                if(wc.getMinecartRiding().Allowed(entity.getLocation(),player,true).Denied()){
+                if(wc.getMinecartRiding() != null && wc.getMinecartRiding().Allowed(entity.getLocation(),player,true).Denied()){
                     event.setCancelled(true);
                     return;
                 }
