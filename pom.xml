@@ -9,7 +9,7 @@
     <properties>
         <depend-dir>C:\dependencies</depend-dir>
         <!-- Versions of dependencies, just update the version numbers here -->
-        <mc-ver>1.7.2</mc-ver>
+        <mc-ver>1.7.9</mc-ver>
         <bukkit-ver>R0.1</bukkit-ver>
         <vault-ver>1.2.16</vault-ver>
         <mv-ver>2.5</mv-ver>
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.7.2-R0.1-SNAPSHOT</version>
+            <version>1.7.9-R0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>

@@ -26,13 +26,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import me.ryanhamshire.GriefPrevention.Configuration.*;
 import me.ryanhamshire.GriefPrevention.Debugger.DebugLevel;
 import me.ryanhamshire.GriefPrevention.CommandHandling.CommandHandler;
+import me.ryanhamshire.GriefPrevention.Configuration.*;
 import me.ryanhamshire.GriefPrevention.events.GPLoadEvent;
 import me.ryanhamshire.GriefPrevention.events.GPUnloadEvent;
 import me.ryanhamshire.GriefPrevention.tasks.DeliverClaimBlocksTask;
@@ -1227,16 +1228,46 @@ public class GriefPrevention extends JavaPlugin {
 		if (player != null)
 			return player;
 
-		// then search offline players
+		
+		
+		
+		
+		
+		
+		
+		//hackfix trust anyone!
+		OfflinePlayer player2 = this.getServer().getOfflinePlayer(name);
+		if (player2 != null) {
+		return player2;
+		}
+		
+		//search offline players that have played on this server before
+		
+/* This should work, but offlineplayers doesn't seem to grab all data from the playerdata folder?
+
+		
+		String nameUUID = player2.getUniqueId().toString().toLowerCase();
 		OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
-		for (int i = 0; i < offlinePlayers.length; i++) {
-			if (offlinePlayers[i].getName().equalsIgnoreCase(name)) {
-				return offlinePlayers[i];
+		 for (int i = 0; i < offlinePlayers.length; i++) {
+			String offUUID = offlinePlayers[i].getUniqueId().toString();
+			this.getServer().broadcastMessage("Off" + offUUID);
+			this.getServer().broadcastMessage("name" + nameUUID);
+			if (nameUUID == offUUID) {
+				this.getServer().broadcastMessage(nameUUID + " " + offUUID);
+				if (player2 != null) {
+					return player2;
+				}
 			}
 		}
+		
+		
+*/
+
+
+
 
 		// if none found, return null
-		return null;
+	return null;
 	}
 
 	public void restoreChunk(Chunk chunk, int miny, boolean aggressiveMode, long delayInTicks, Player playerReceivingVisualization) {
